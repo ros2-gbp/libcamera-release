@@ -7,11 +7,13 @@
 
   <description>An open source camera stack and framework for Linux, Android, and ChromeOS</description>
 
-  <maintainer email="libcamera-devel@lists.libcamera.org">libcamera project</maintainer>
+  <maintainer email="Rauch.Christian@gmx.de">Christian Rauch</maintainer>
 
   <license>LGPL-2.1</license>
 
   <url>https://libcamera.org</url>
+
+  <author email="libcamera-devel@lists.libcamera.org">libcamera project</author>
 
   <buildtool_depend>meson</buildtool_depend>
 
