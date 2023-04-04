@@ -27,6 +27,9 @@
   <depend>libgnutls28-dev</depend>
   <depend>libudev-dev</depend>
 
+  <!-- workaround for https://bugs.libcamera.org/show_bug.cgi?id=189 -->
+  <depend>libatomic</depend>
+
   <export>
     <build_type>meson</build_type>
   </export>
