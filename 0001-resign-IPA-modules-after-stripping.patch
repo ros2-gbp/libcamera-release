@@ -1,0 +1,26 @@
+From 54e34a4a7b7c02674d91365db8d033022d6cdb96 Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Thu, 9 May 2024 20:26:35 +0200
+Subject: [PATCH] resign IPA modules after stripping
+
+---
+ debian/rules.em | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index f19cc75..6c7d27e 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -50,3 +50,9 @@ override_dh_shlibdeps:
+ override_dh_auto_install:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+ 	dh_auto_install
++
++override_dh_strip:
++	dh_strip -a
++	MESON_INSTALL_DESTDIR_PREFIX=. ./src/ipa/ipa-sign-install.sh \
++		./.obj-${DEB_HOST_GNU_TYPE}/src/ipa-priv-key.pem \
++		debian/@(Package)/@(InstallationPrefix)/lib/libcamera/ipa_*.so
+-- 
+2.34.1
+
