@@ -1,4 +1,4 @@
-From 682a4f3882226515030d79b62c07b8164d370d2d Mon Sep 17 00:00:00 2001
+From d7baa6a9163bfabea2cffc42e14d7f045ab2d188 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 23 May 2024 21:10:53 +0200
 Subject: [PATCH] re-sign IPA plugins
@@ -8,12 +8,12 @@ Subject: [PATCH] re-sign IPA plugins
  1 file changed, 7 insertions(+)
 
 diff --git a/rpm/template.spec.em b/rpm/template.spec.em
-index fe6d0da..204a61e 100644
+index cc2626a..988cfac 100644
 --- a/rpm/template.spec.em
 +++ b/rpm/template.spec.em
 @@ -49,6 +49,13 @@ if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.
      %{_target_platform}
- %meson_build
+ %meson_build -C %{_target_platform}
  
 +%define __spec_install_post \
 +    %{?__debug_package:%{__debug_install_post}} \
@@ -26,5 +26,5 @@ index fe6d0da..204a61e 100644
  # In case we're installing to a non-standard location, look for a setup.sh
  # in the install tree and source it.  It will set things like
 -- 
-2.34.1
+2.43.0
 
