@@ -1,4 +1,4 @@
-From 551df72659eb129f444b5becba6d17c11ef564ef Mon Sep 17 00:00:00 2001
+From 493de82bd6c47b4f424b32bcdb5abe21338005a3 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 21 May 2024 21:47:34 +0200
 Subject: [PATCH] resign IPA plugins
@@ -22,5 +22,5 @@ index f19cc75..6c7d27e 100755
 +		./.obj-${DEB_HOST_GNU_TYPE}/src/ipa-priv-key.pem \
 +		debian/@(Package)/@(InstallationPrefix)/lib/libcamera/ipa_*.so
 -- 
-2.34.1
+2.43.0
 
