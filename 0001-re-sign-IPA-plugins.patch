@@ -1,19 +1,19 @@
-From 05e007e3958e64b70abaa90d80c05506c2eaae46 Mon Sep 17 00:00:00 2001
+From fdf5ccd5c76a4be9b5331e9f681daab8ae6c5ddd Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 23 May 2024 21:09:22 +0200
-Subject: [PATCH] re-sign IPA plugins
+Subject: [PATCH 1/2] re-sign IPA plugins
 
 ---
  rpm/template.spec.em | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/rpm/template.spec.em b/rpm/template.spec.em
-index cc2626a..988cfac 100644
+index 07bd1e9..742e389 100644
 --- a/rpm/template.spec.em
 +++ b/rpm/template.spec.em
 @@ -49,6 +49,13 @@ if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.
-     %{_target_platform}
- %meson_build -C %{_target_platform}
+     %{_vpath_builddir}
+ %meson_build
  
 +%define __spec_install_post \
 +    %{?__debug_package:%{__debug_install_post}} \
