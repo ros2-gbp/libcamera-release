@@ -53,7 +53,7 @@ if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.
     %{?__debug_package:%{__debug_install_post}} \
     %{__arch_install_post} \
     %{__os_install_post} \
-    %{_builddir}/src/ipa/ipa-sign-install.sh %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/src/ipa-priv-key.pem %{buildroot}/%{_libdir}/libcamera/ipa_*.so \
+    %{_builddir}/%{name}-%{version}/src/ipa/ipa-sign-install.sh %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/src/ipa-priv-key.pem %{buildroot}/"@(InstallationPrefix)"/lib/libcamera/ipa_*.so \
 %{nil}
 
 %install
