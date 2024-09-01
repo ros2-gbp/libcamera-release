@@ -1,14 +1,14 @@
-From fdf5ccd5c76a4be9b5331e9f681daab8ae6c5ddd Mon Sep 17 00:00:00 2001
+From 4b0de2dc9ebd91d0f6c0fa0a5103b25db639b8b0 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 23 May 2024 21:09:22 +0200
-Subject: [PATCH 1/2] re-sign IPA plugins
+Subject: [PATCH] re-sign IPA plugins
 
 ---
  rpm/template.spec.em | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/rpm/template.spec.em b/rpm/template.spec.em
-index 07bd1e9..742e389 100644
+index 07bd1e9..5fb8fe4 100644
 --- a/rpm/template.spec.em
 +++ b/rpm/template.spec.em
 @@ -49,6 +49,13 @@ if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.
@@ -19,7 +19,7 @@ index 07bd1e9..742e389 100644
 +    %{?__debug_package:%{__debug_install_post}} \
 +    %{__arch_install_post} \
 +    %{__os_install_post} \
-+    %{_builddir}/src/ipa/ipa-sign-install.sh %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/src/ipa-priv-key.pem %{buildroot}/%{_libdir}/libcamera/ipa_*.so \
++    %{_builddir}/%{name}-%{version}/src/ipa/ipa-sign-install.sh %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/src/ipa-priv-key.pem %{buildroot}/@(InstallationPrefix)/lib/libcamera/ipa_*.so \
 +%{nil}
 +
  %install
