@@ -58,5 +58,4 @@ cam  = executable('cam', cam_sources,
                       libyaml,
                   ],
                   cpp_args : cam_cpp_args,
-                  install : true,
-                  install_tag : 'bin')
+                  install : true)

@@ -889,9 +889,9 @@ CameraConfiguration::Status SimpleCameraConfiguration::validate()
 	if (config_.empty())
 		return Invalid;
 
-	Orientation requestedOrientation = orientation;
-	combinedTransform_ = sensor->computeTransform(&orientation);
-	if (orientation != requestedOrientation)
+	Transform requestedTransform = transform;
+	combinedTransform_ = sensor->validateTransform(&transform);
+	if (transform != requestedTransform)
 		status = Adjusted;
 
 	/* Cap the number of entries to the available streams. */
