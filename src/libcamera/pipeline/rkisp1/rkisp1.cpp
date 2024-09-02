@@ -481,9 +481,9 @@ CameraConfiguration::Status RkISP1CameraConfiguration::validate()
 		status = Adjusted;
 	}
 
-	Orientation requestedOrientation = orientation;
-	combinedTransform_ = data_->sensor_->computeTransform(&orientation);
-	if (orientation != requestedOrientation)
+	Transform requestedTransform = transform;
+	Transform combined = sensor->validateTransform(&transform);
+	if (transform != requestedTransform)
 		status = Adjusted;
 
 	/*
@@ -594,6 +594,8 @@ CameraConfiguration::Status RkISP1CameraConfiguration::validate()
 
 	if (sensorFormat_.size.isNull())
 		sensorFormat_.size = sensor->resolution();
+
+	combinedTransform_ = combined;
 
 	return status;
 }

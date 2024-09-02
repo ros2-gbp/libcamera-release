@@ -23,9 +23,13 @@ ${ids}
 
 ${controls}
 
-extern const ControlIdMap properties;
+namespace draft {
 
-${vendor_controls}
+${draft_controls}
+
+} /* namespace draft */
+
+extern const ControlIdMap properties;
 
 } /* namespace properties */
 

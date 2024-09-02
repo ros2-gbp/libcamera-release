@@ -1,7 +1,8 @@
-# Copyright 2014 The Chromium Authors
+# Copyright 2014 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import imp
 import os.path
 import sys
 
@@ -21,7 +22,7 @@ class LexError(Error):
 
 # We have methods which look like they could be functions:
 # pylint: disable=R0201
-class Lexer:
+class Lexer(object):
   def __init__(self, filename):
     self.filename = filename
 
@@ -55,7 +56,6 @@ class Lexer:
       'PENDING_RECEIVER',
       'PENDING_ASSOCIATED_REMOTE',
       'PENDING_ASSOCIATED_RECEIVER',
-      'FEATURE',
   )
 
   keyword_map = {}
@@ -81,6 +81,7 @@ class Lexer:
       # Operators
       'MINUS',
       'PLUS',
+      'AMP',
       'QSTN',
 
       # Assignment
@@ -167,6 +168,7 @@ class Lexer:
   # Operators
   t_MINUS = r'-'
   t_PLUS = r'\+'
+  t_AMP = r'&'
   t_QSTN = r'\?'
 
   # =

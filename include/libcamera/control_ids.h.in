@@ -26,7 +26,11 @@ ${controls}
 
 extern const ControlIdMap controls;
 
-${vendor_controls}
+namespace draft {
+
+${draft_controls}
+
+} /* namespace draft */
 
 } /* namespace controls */
 
