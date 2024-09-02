@@ -1,3 +1,26 @@
+## libcamera (humble) - 0.1.0-1
+
+The packages in the `libcamera` repository were released into the `humble` distro by running `/home/christian/.local/bin/bloom-release --ros-distro humble libcamera --no-pull-request` on `Mon, 02 Sep 2024 21:28:37 -0000`
+
+The `libcamera` package was released.
+
+Version of package(s) in repository `libcamera`:
+
+- upstream repository: https://git.libcamera.org/libcamera/libcamera.git
+- release repository: https://github.com/ros2-gbp/libcamera-release.git
+- rosdistro version: `0.1.0-1`
+- old version: `0.2.0-3`
+- new version: `0.1.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.24.0`
+- rosdistro version: `0.9.1`
+- vcstools version: `0.1.42`
+
+
 ## libcamera (jazzy) - 0.3.1-3
 
 The packages in the `libcamera` repository were released into the `jazzy` distro by running `/home/christian/.local/bin/bloom-release --ros-distro jazzy libcamera` on `Sun, 01 Sep 2024 19:37:10 -0000`
