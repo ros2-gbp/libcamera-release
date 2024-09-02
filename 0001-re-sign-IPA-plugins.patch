@@ -1,0 +1,30 @@
+From 62bd94d4fd7d7aa540481311540e7ef7df3c4020 Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Thu, 23 May 2024 21:10:53 +0200
+Subject: [PATCH] re-sign IPA plugins
+
+---
+ rpm/template.spec.em | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/rpm/template.spec.em b/rpm/template.spec.em
+index 07bd1e9..5fb8fe4 100644
+--- a/rpm/template.spec.em
++++ b/rpm/template.spec.em
+@@ -49,6 +49,13 @@ if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.
+     %{_vpath_builddir}
+ %meson_build
+ 
++%define __spec_install_post \
++    %{?__debug_package:%{__debug_install_post}} \
++    %{__arch_install_post} \
++    %{__os_install_post} \
++    %{_builddir}/%{name}-%{version}/src/ipa/ipa-sign-install.sh %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/src/ipa-priv-key.pem %{buildroot}/@(InstallationPrefix)/lib/libcamera/ipa_*.so \
++%{nil}
++
+ %install
+ # In case we're installing to a non-standard location, look for a setup.sh
+ # in the install tree and source it.  It will set things like
+-- 
+2.43.0
+
