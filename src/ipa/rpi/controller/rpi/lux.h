@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * Lux control algorithm
+ * lux.h - Lux control algorithm
  */
 #pragma once
 

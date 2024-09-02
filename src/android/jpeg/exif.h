@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * EXIF tag creator using libexif
+ * exif.h - EXIF tag creator using libexif
  */
 
 #pragma once

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Raspberry Pi Ltd
  *
- * PDAF Metadata
+ * pdaf_data.h - PDAF Metadata
  */
 #pragma once
 

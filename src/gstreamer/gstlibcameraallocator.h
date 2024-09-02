@@ -3,7 +3,7 @@
  * Copyright (C) 2020, Collabora Ltd.
  *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *
- * GStreamer Custom Allocator
+ * gstlibcameraallocator.h - GStreamer Custom Allocator
  */
 
 #pragma once

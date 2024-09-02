@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022-2023, Raspberry Pi Ltd
  *
- * Autofocus control algorithm
+ * af.cpp - Autofocus control algorithm
  */
 
 #include "af.h"
@@ -139,7 +139,7 @@ int Af::CfgParams::read(const libcamera::YamlObject &params)
 	readNumber<uint32_t>(skipFrames, params, "skip_frames");
 
 	if (params.contains("map"))
-		map = params["map"].get<ipa::Pwl>(ipa::Pwl{});
+		map.read(params["map"]);
 	else
 		LOG(RPiAf, Warning) << "No map defined";
 
@@ -721,7 +721,7 @@ bool Af::setLensPosition(double dioptres, int *hwpos)
 
 	if (mode_ == AfModeManual) {
 		LOG(RPiAf, Debug) << "setLensPosition: " << dioptres;
-		ftarget_ = cfg_.map.domain().clamp(dioptres);
+		ftarget_ = cfg_.map.domain().clip(dioptres);
 		changed = !(initted_ && fsmooth_ == ftarget_);
 		updateLensPosition();
 	}

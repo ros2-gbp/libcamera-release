@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Poll-based event dispatcher
+ * event_dispatcher_poll.cpp - Poll-based event dispatcher
  */
 
 #include <libcamera/base/event_dispatcher_poll.h>

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Google Inc.
  *
- * JPEG encoding using CrOS JEA
+ * encoder_jea.h - JPEG encoding using CrOS JEA
  */
 
 #pragma once

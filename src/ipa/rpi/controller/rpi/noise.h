@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * Noise control algorithm
+ * noise.h - Noise control algorithm
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022, Paul Elder <paul.elder@ideasonboard.com>
 #
-# Base class for a parser for a specific format of config file
+# parser.py - Base class for a parser for a specific format of config file
 
 class Parser(object):
     def __init__(self):

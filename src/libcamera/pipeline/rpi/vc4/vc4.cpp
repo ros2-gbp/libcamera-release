@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019-2023, Raspberry Pi Ltd
  *
- * Pipeline handler for VC4-based Raspberry Pi devices
+ * vc4.cpp - Pipeline handler for VC4-based Raspberry Pi devices
  */
 
 #include <linux/bcm2835-isp.h>
@@ -12,10 +12,11 @@
 #include <libcamera/formats.h>
 
 #include "libcamera/internal/device_enumerator.h"
-#include "libcamera/internal/dma_buf_allocator.h"
 
 #include "../common/pipeline_base.h"
 #include "../common/rpi_stream.h"
+
+#include "dma_heaps.h"
 
 using namespace std::chrono_literals;
 
@@ -24,7 +25,6 @@ namespace libcamera {
 LOG_DECLARE_CATEGORY(RPI)
 
 using StreamFlag = RPi::Stream::StreamFlag;
-using StreamParams = RPi::RPiCameraConfiguration::StreamParams;
 
 namespace {
 
@@ -65,7 +65,8 @@ public:
 	{
 	}
 
-	CameraConfiguration::Status platformValidate(RPi::RPiCameraConfiguration *rpiConfig) const override;
+	CameraConfiguration::Status platformValidate(std::vector<StreamParams> &rawStreams,
+						     std::vector<StreamParams> &outStreams) const override;
 
 	int platformPipelineConfigure(const std::unique_ptr<YamlObject> &root) override;
 
@@ -77,7 +78,7 @@ public:
 	void ispOutputDequeue(FrameBuffer *buffer);
 
 	void processStatsComplete(const ipa::RPi::BufferIds &buffers);
-	void prepareIspComplete(const ipa::RPi::BufferIds &buffers, bool stitchSwapBuffers);
+	void prepareIspComplete(const ipa::RPi::BufferIds &buffers);
 	void setIspControls(const ControlList &controls);
 	void setCameraTimeout(uint32_t maxFrameLengthMs);
 
@@ -86,7 +87,7 @@ public:
 	RPi::Device<Isp, 4> isp_;
 
 	/* DMAHEAP allocation helper. */
-	DmaBufAllocator dmaHeap_;
+	RPi::DmaHeap dmaHeap_;
 	SharedFD lsTable_;
 
 	struct Config {
@@ -114,7 +115,10 @@ private:
 		isp_[Isp::Input].dev()->setSelection(V4L2_SEL_TGT_CROP, &ispCrop_);
 	}
 
-	int platformConfigure(const RPi::RPiCameraConfiguration *rpiConfig) override;
+	int platformConfigure(const V4L2SubdeviceFormat &sensorFormat,
+			      std::optional<BayerFormat::Packing> packing,
+			      std::vector<StreamParams> &rawStreams,
+			      std::vector<StreamParams> &outStreams) override;
 	int platformConfigureIpa(ipa::RPi::ConfigParams &params) override;
 
 	int platformInitIpa([[maybe_unused]] ipa::RPi::InitParams &params) override
@@ -257,21 +261,10 @@ int PipelineHandlerVc4::prepareBuffers(Camera *camera)
 
 		} else if (stream == &data->unicam_[Unicam::Embedded]) {
 			/*
-			 * Embedded data buffers are (currently) for internal use, and
-			 * are small enough (typically 1-2KB) that we can
-			 * allocate them generously to avoid causing problems in the
-			 * IPA when we cannot supply the metadata.
-			 *
-			 * 12 are allocated as a typical application will have 8-10
-			 * input buffers, so allocating more embedded buffers than that
-			 * is a sensible choice.
-			 *
-			 * The lifetimes of these buffers are smaller than those of the
-			 * raw buffers, so allocating a fixed number will still suffice
-			 * if the application requests a greater number of raw
-			 * buffers, as these will be recycled quicker.
+			 * Embedded data buffers are (currently) for internal use,
+			 * so allocate the minimum required to avoid frame drops.
 			 */
-			numBuffers = 12;
+			numBuffers = minBuffers;
 		} else {
 			/*
 			 * Since the ISP runs synchronous with the IPA and requests,
@@ -281,9 +274,6 @@ int PipelineHandlerVc4::prepareBuffers(Camera *camera)
 			 */
 			numBuffers = 1;
 		}
-
-		LOG(RPI, Debug) << "Preparing " << numBuffers
-				<< " buffers for stream " << stream->name();
 
 		ret = stream->prepareBuffers(numBuffers);
 		if (ret < 0)
@@ -404,11 +394,9 @@ int PipelineHandlerVc4::platformRegister(std::unique_ptr<RPi::CameraData> &camer
 	return 0;
 }
 
-CameraConfiguration::Status Vc4CameraData::platformValidate(RPi::RPiCameraConfiguration *rpiConfig) const
+CameraConfiguration::Status Vc4CameraData::platformValidate(std::vector<StreamParams> &rawStreams,
+							    std::vector<StreamParams> &outStreams) const
 {
-	std::vector<StreamParams> &rawStreams = rpiConfig->rawStreams_;
-	std::vector<StreamParams> &outStreams = rpiConfig->outStreams_;
-
 	CameraConfiguration::Status status = CameraConfiguration::Status::Valid;
 
 	/* Can only output 1 RAW stream, or 2 YUV/RGB streams. */
@@ -417,44 +405,8 @@ CameraConfiguration::Status Vc4CameraData::platformValidate(RPi::RPiCameraConfig
 		return CameraConfiguration::Status::Invalid;
 	}
 
-	if (!rawStreams.empty()) {
+	if (!rawStreams.empty())
 		rawStreams[0].dev = unicam_[Unicam::Image].dev();
-
-		/* Adjust the RAW stream to match the computed sensor format. */
-		StreamConfiguration *rawStream = rawStreams[0].cfg;
-		BayerFormat rawBayer = BayerFormat::fromPixelFormat(rawStream->pixelFormat);
-
-		/* Apply the sensor bitdepth. */
-		rawBayer.bitDepth = BayerFormat::fromMbusCode(rpiConfig->sensorFormat_.code).bitDepth;
-
-		/* Default to CSI2 packing if the user request is unsupported. */
-		if (rawBayer.packing != BayerFormat::Packing::CSI2 &&
-		    rawBayer.packing != BayerFormat::Packing::None)
-			rawBayer.packing = BayerFormat::Packing::CSI2;
-
-		PixelFormat rawFormat = rawBayer.toPixelFormat();
-
-		/*
-		 * Try for an unpacked format if a packed one wasn't available.
-		 * This catches 8 (and 16) bit formats which would otherwise
-		 * fail.
-		 */
-		if (!rawFormat.isValid() && rawBayer.packing != BayerFormat::Packing::None) {
-			rawBayer.packing = BayerFormat::Packing::None;
-			rawFormat = rawBayer.toPixelFormat();
-		}
-
-		if (rawStream->pixelFormat != rawFormat ||
-		    rawStream->size != rpiConfig->sensorFormat_.size) {
-			rawStream->pixelFormat = rawFormat;
-			rawStream->size = rpiConfig->sensorFormat_.size;
-
-			status = CameraConfiguration::Adjusted;
-		}
-
-		rawStreams[0].format =
-			RPi::PipelineHandlerBase::toV4L2DeviceFormat(unicam_[Unicam::Image].dev(), rawStream);
-	}
 
 	/*
 	 * For the two ISP outputs, one stream must be equal or smaller than the
@@ -464,11 +416,6 @@ CameraConfiguration::Status Vc4CameraData::platformValidate(RPi::RPiCameraConfig
 	 */
 	for (unsigned int i = 0; i < outStreams.size(); i++) {
 		Size size;
-
-		/*
-		 * \todo Should we warn if upscaling, as it reduces the image
-		 * quality and is usually undesired ?
-		 */
 
 		size.width = std::min(outStreams[i].cfg->size.width,
 				      outStreams[0].cfg->size.width);
@@ -485,8 +432,6 @@ CameraConfiguration::Status Vc4CameraData::platformValidate(RPi::RPiCameraConfig
 		 * have that fixed up in the code above.
 		 */
 		outStreams[i].dev = isp_[i == 0 ? Isp::Output0 : Isp::Output1].dev();
-
-		outStreams[i].format = RPi::PipelineHandlerBase::toV4L2DeviceFormat(outStreams[i].dev, outStreams[i].cfg);
 	}
 
 	return status;
@@ -534,14 +479,22 @@ int Vc4CameraData::platformPipelineConfigure(const std::unique_ptr<YamlObject> &
 	return 0;
 }
 
-int Vc4CameraData::platformConfigure(const RPi::RPiCameraConfiguration *rpiConfig)
+int Vc4CameraData::platformConfigure(const V4L2SubdeviceFormat &sensorFormat,
+				     std::optional<BayerFormat::Packing> packing,
+				     std::vector<StreamParams> &rawStreams,
+				     std::vector<StreamParams> &outStreams)
 {
-	const std::vector<StreamParams> &rawStreams = rpiConfig->rawStreams_;
-	const std::vector<StreamParams> &outStreams = rpiConfig->outStreams_;
 	int ret;
 
+	if (!packing)
+		packing = BayerFormat::Packing::CSI2;
+
 	V4L2VideoDevice *unicam = unicam_[Unicam::Image].dev();
-	V4L2DeviceFormat unicamFormat;
+	V4L2DeviceFormat unicamFormat = RPi::PipelineHandlerBase::toV4L2DeviceFormat(unicam, sensorFormat, *packing);
+
+	ret = unicam->setFormat(&unicamFormat);
+	if (ret)
+		return ret;
 
 	/*
 	 * See which streams are requested, and route the user
@@ -550,24 +503,14 @@ int Vc4CameraData::platformConfigure(const RPi::RPiCameraConfiguration *rpiConfi
 	if (!rawStreams.empty()) {
 		rawStreams[0].cfg->setStream(&unicam_[Unicam::Image]);
 		unicam_[Unicam::Image].setFlags(StreamFlag::External);
-		unicamFormat = rawStreams[0].format;
-	} else {
-		unicamFormat =
-			RPi::PipelineHandlerBase::toV4L2DeviceFormat(unicam,
-								     rpiConfig->sensorFormat_,
-								     BayerFormat::Packing::CSI2);
 	}
-
-	ret = unicam->setFormat(&unicamFormat);
-	if (ret)
-		return ret;
 
 	ret = isp_[Isp::Input].dev()->setFormat(&unicamFormat);
 	if (ret)
 		return ret;
 
 	LOG(RPI, Info) << "Sensor: " << sensor_->id()
-		       << " - Selected sensor format: " << rpiConfig->sensorFormat_
+		       << " - Selected sensor format: " << sensorFormat
 		       << " - Selected unicam format: " << unicamFormat;
 
 	/* Use a sensible small default size if no output streams are configured. */
@@ -579,7 +522,11 @@ int Vc4CameraData::platformConfigure(const RPi::RPiCameraConfiguration *rpiConfi
 
 		/* The largest resolution gets routed to the ISP Output 0 node. */
 		RPi::Stream *stream = i == 0 ? &isp_[Isp::Output0] : &isp_[Isp::Output1];
-		format = outStreams[i].format;
+
+		V4L2PixelFormat fourcc = stream->dev()->toV4L2PixelFormat(cfg->pixelFormat);
+		format.size = cfg->size;
+		format.fourcc = fourcc;
+		format.colorSpace = cfg->colorSpace;
 
 		LOG(RPI, Debug) << "Setting " << stream->name() << " to "
 				<< format;
@@ -587,6 +534,13 @@ int Vc4CameraData::platformConfigure(const RPi::RPiCameraConfiguration *rpiConfi
 		ret = stream->dev()->setFormat(&format);
 		if (ret)
 			return -EINVAL;
+
+		if (format.size != cfg->size || format.fourcc != fourcc) {
+			LOG(RPI, Error)
+				<< "Failed to set requested format on " << stream->name()
+				<< ", returned " << format;
+			return -EINVAL;
+		}
 
 		LOG(RPI, Debug)
 			<< "Stream " << stream->name() << " has color space "
@@ -641,7 +595,7 @@ int Vc4CameraData::platformConfigure(const RPi::RPiCameraConfiguration *rpiConfi
 	 * \todo If Output 1 format is not YUV420, Output 1 ought to be disabled as
 	 * colour denoise will not run.
 	 */
-	if (outStreams.size() <= 1) {
+	if (outStreams.size() == 1) {
 		V4L2VideoDevice *dev = isp_[Isp::Output1].dev();
 
 		V4L2DeviceFormat output1Format;
@@ -802,7 +756,7 @@ void Vc4CameraData::ispInputDequeue(FrameBuffer *buffer)
 void Vc4CameraData::ispOutputDequeue(FrameBuffer *buffer)
 {
 	RPi::Stream *stream = nullptr;
-	unsigned int index = 0;
+	unsigned int index;
 
 	if (!isRunning())
 		return;
@@ -850,7 +804,7 @@ void Vc4CameraData::processStatsComplete(const ipa::RPi::BufferIds &buffers)
 	if (!isRunning())
 		return;
 
-	FrameBuffer *buffer = isp_[Isp::Stats].getBuffers().at(buffers.stats & RPi::MaskID).buffer;
+	FrameBuffer *buffer = isp_[Isp::Stats].getBuffers().at(buffers.stats & RPi::MaskID);
 
 	handleStreamBuffer(buffer, &isp_[Isp::Stats]);
 
@@ -858,8 +812,7 @@ void Vc4CameraData::processStatsComplete(const ipa::RPi::BufferIds &buffers)
 	handleState();
 }
 
-void Vc4CameraData::prepareIspComplete(const ipa::RPi::BufferIds &buffers,
-				       [[maybe_unused]] bool stitchSwapBuffers)
+void Vc4CameraData::prepareIspComplete(const ipa::RPi::BufferIds &buffers)
 {
 	unsigned int embeddedId = buffers.embedded & RPi::MaskID;
 	unsigned int bayer = buffers.bayer & RPi::MaskID;
@@ -868,7 +821,7 @@ void Vc4CameraData::prepareIspComplete(const ipa::RPi::BufferIds &buffers,
 	if (!isRunning())
 		return;
 
-	buffer = unicam_[Unicam::Image].getBuffers().at(bayer & RPi::MaskID).buffer;
+	buffer = unicam_[Unicam::Image].getBuffers().at(bayer & RPi::MaskID);
 	LOG(RPI, Debug) << "Input re-queue to ISP, buffer id " << (bayer & RPi::MaskID)
 			<< ", timestamp: " << buffer->metadata().timestamp;
 
@@ -876,7 +829,7 @@ void Vc4CameraData::prepareIspComplete(const ipa::RPi::BufferIds &buffers,
 	ispOutputCount_ = 0;
 
 	if (sensorMetadata_ && embeddedId) {
-		buffer = unicam_[Unicam::Embedded].getBuffers().at(embeddedId & RPi::MaskID).buffer;
+		buffer = unicam_[Unicam::Embedded].getBuffers().at(embeddedId & RPi::MaskID);
 		handleStreamBuffer(buffer, &unicam_[Unicam::Embedded]);
 	}
 
@@ -955,7 +908,6 @@ void Vc4CameraData::tryRunPipeline()
 	params.requestControls = request->controls();
 	params.ipaContext = request->sequence();
 	params.delayContext = bayerFrame.delayContext;
-	params.buffers.embedded = 0;
 
 	if (embeddedBuffer) {
 		unsigned int embeddedId = unicam_[Unicam::Embedded].getBufferId(embeddedBuffer);
@@ -1018,6 +970,6 @@ bool Vc4CameraData::findMatchingBuffers(BayerFrame &bayerFrame, FrameBuffer *&em
 	return true;
 }
 
-REGISTER_PIPELINE_HANDLER(PipelineHandlerVc4, "rpi/vc4")
+REGISTER_PIPELINE_HANDLER(PipelineHandlerVc4)
 
 } /* namespace libcamera */

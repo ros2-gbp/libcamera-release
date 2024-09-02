@@ -3,7 +3,7 @@
  * Copyright (C) 2020, Laurent Pinchart
  * Copyright 2022 NXP
  *
- * V4l2 M2M Format converter interface
+ * converter_v4l2_m2m.h - V4l2 M2M Format converter interface
  */
 
 #pragma once
@@ -28,7 +28,6 @@ class FrameBuffer;
 class MediaDevice;
 class Size;
 class SizeRange;
-class Stream;
 struct StreamConfiguration;
 class V4L2M2MDevice;
 
@@ -48,20 +47,20 @@ public:
 
 	int configure(const StreamConfiguration &inputCfg,
 		      const std::vector<std::reference_wrapper<StreamConfiguration>> &outputCfg);
-	int exportBuffers(const Stream *stream, unsigned int count,
+	int exportBuffers(unsigned int ouput, unsigned int count,
 			  std::vector<std::unique_ptr<FrameBuffer>> *buffers);
 
 	int start();
 	void stop();
 
 	int queueBuffers(FrameBuffer *input,
-			 const std::map<const Stream *, FrameBuffer *> &outputs);
+			 const std::map<unsigned int, FrameBuffer *> &outputs);
 
 private:
-	class V4L2M2MStream : protected Loggable
+	class Stream : protected Loggable
 	{
 	public:
-		V4L2M2MStream(V4L2M2MConverter *converter, const Stream *stream);
+		Stream(V4L2M2MConverter *converter, unsigned int index);
 
 		bool isValid() const { return m2m_ != nullptr; }
 
@@ -83,7 +82,7 @@ private:
 		void outputBufferReady(FrameBuffer *buffer);
 
 		V4L2M2MConverter *converter_;
-		const Stream *stream_;
+		unsigned int index_;
 		std::unique_ptr<V4L2M2MDevice> m2m_;
 
 		unsigned int inputBufferCount_;
@@ -92,7 +91,7 @@ private:
 
 	std::unique_ptr<V4L2M2MDevice> m2m_;
 
-	std::map<const Stream *, std::unique_ptr<V4L2M2MStream>> streams_;
+	std::vector<Stream> streams_;
 	std::map<FrameBuffer *, unsigned int> queue_;
 };
 

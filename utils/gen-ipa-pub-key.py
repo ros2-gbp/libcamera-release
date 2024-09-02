@@ -4,7 +4,7 @@
 #
 # Author: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 #
-# Generate the IPA module signing public key
+# ipa-gen-key.py - Generate the IPA module signing public key
 
 import string
 import subprocess

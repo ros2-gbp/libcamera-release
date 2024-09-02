@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019-2021, Google Inc.
  *
- * libcamera Android Camera Request Descriptor
+ * camera_request.cpp - libcamera Android Camera Request Descriptor
  */
 
 #include "camera_request.h"

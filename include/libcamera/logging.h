@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Logging infrastructure
+ * logging.h - Logging infrastructure
  */
 
 #pragma once

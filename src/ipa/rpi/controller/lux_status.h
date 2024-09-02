@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * Lux control algorithm status
+ * lux_status.h - Lux control algorithm status
  */
 #pragma once
 

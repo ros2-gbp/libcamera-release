@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * cam - Event loop
+ * event_loop.cpp - cam - Event loop
  */
 
 #include "event_loop.h"

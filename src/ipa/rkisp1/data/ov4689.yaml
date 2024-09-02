@@ -6,4 +6,8 @@ algorithms:
   - Agc:
   - Awb:
   - BlackLevelCorrection:
+      R:  66
+      Gr: 66
+      Gb: 66
+      B:  66
 ...

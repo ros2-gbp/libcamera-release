@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Sebastian Fricke
  *
- * BayerFormat class tests
+ * bayer_format.cpp - BayerFormat class tests
  */
 
 #include <iostream>

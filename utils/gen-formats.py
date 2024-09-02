@@ -4,7 +4,7 @@
 #
 # Author: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 #
-# Generate formats definitions from YAML
+# gen-formats.py - Generate formats definitions from YAML
 
 import argparse
 import re

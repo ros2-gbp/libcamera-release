@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Raspberry Pi Ltd
  *
- * Raspberry Pi region based statistics container
+ * region_stats.h - Raspberry Pi region based statistics container
  */
 #pragma once
 

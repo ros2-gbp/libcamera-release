@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * V4L2 device controls handling test
+ * controls.cpp - V4L2 device controls handling test
  */
 
 #include <algorithm>

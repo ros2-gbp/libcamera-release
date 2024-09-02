@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Image Processing Algorithm IPC module using unix socket
+ * ipc_pipe_unixsocket.cpp - Image Processing Algorithm IPC module using unix socket
  */
 
 #include "libcamera/internal/ipc_pipe_unixsocket.h"

@@ -3,7 +3,7 @@
  * Copyright (C) 2020, Collabora Ltd.
  *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *
- * GStreamer Custom Allocator
+ * gstlibcameraallocator.cpp - GStreamer Custom Allocator
  */
 
 #include "gstlibcameraallocator.h"
@@ -100,11 +100,6 @@ struct _GstLibcameraAllocator {
 	 * FrameWrap.
 	 */
 	GHashTable *pools;
-	/*
-	 * The camera manager represents the library, which needs to be kept
-	 * alive until all the memory has been released.
-	 */
-	std::shared_ptr<CameraManager> *cm_ptr;
 };
 
 G_DEFINE_TYPE(GstLibcameraAllocator, gst_libcamera_allocator,
@@ -178,9 +173,6 @@ gst_libcamera_allocator_finalize(GObject *object)
 
 	delete self->fb_allocator;
 
-	/* Keep last. */
-	delete self->cm_ptr;
-
 	G_OBJECT_CLASS(gst_libcamera_allocator_parent_class)->finalize(object);
 }
 
@@ -201,17 +193,11 @@ gst_libcamera_allocator_new(std::shared_ptr<Camera> camera,
 {
 	auto *self = GST_LIBCAMERA_ALLOCATOR(g_object_new(GST_TYPE_LIBCAMERA_ALLOCATOR,
 							  nullptr));
-	gint ret;
-
-	self->cm_ptr = new std::shared_ptr<CameraManager>(gst_libcamera_get_camera_manager(ret));
-	if (ret) {
-		g_object_unref(self);
-		return nullptr;
-	}
 
 	self->fb_allocator = new FrameBufferAllocator(camera);
 	for (StreamConfiguration &streamCfg : *config_) {
 		Stream *stream = streamCfg.stream();
+		gint ret;
 
 		ret = self->fb_allocator->allocate(stream);
 		if (ret == 0)

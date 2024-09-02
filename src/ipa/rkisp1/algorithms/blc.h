@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021-2022, Ideas On Board
  *
- * RkISP1 Black Level Correction control
+ * blc.h - RkISP1 Black Level Correction control
  */
 
 #pragma once
@@ -23,10 +23,7 @@ public:
 	void prepare(IPAContext &context, const uint32_t frame,
 		     IPAFrameContext &frameContext,
 		     rkisp1_params_cfg *params) override;
-	void process(IPAContext &context, const uint32_t frame,
-		     IPAFrameContext &frameContext,
-		     const rkisp1_stat_buffer *stats,
-		     ControlList &metadata) override;
+
 private:
 	bool tuningParameters_;
 	int16_t blackLevelRed_;

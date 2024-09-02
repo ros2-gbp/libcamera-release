@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Intel IPU3 ImgU
+ * imgu.cpp - Intel IPU3 ImgU
  */
 
 #include "imgu.h"
@@ -504,7 +504,7 @@ int ImgUDevice::configure(const PipeConfig &pipeConfig, V4L2DeviceFormat *inputF
 	LOG(IPU3, Debug) << "ImgU BDS rectangle = " << bds;
 
 	V4L2SubdeviceFormat gdcFormat = {};
-	gdcFormat.code = MEDIA_BUS_FMT_FIXED;
+	gdcFormat.mbus_code = MEDIA_BUS_FMT_FIXED;
 	gdcFormat.size = pipeConfig.gdc;
 
 	ret = imgu_->setFormat(PAD_INPUT, &gdcFormat);
@@ -543,7 +543,7 @@ int ImgUDevice::configureVideoDevice(V4L2VideoDevice *dev, unsigned int pad,
 				     V4L2DeviceFormat *outputFormat)
 {
 	V4L2SubdeviceFormat imguFormat = {};
-	imguFormat.code = MEDIA_BUS_FMT_FIXED;
+	imguFormat.mbus_code = MEDIA_BUS_FMT_FIXED;
 	imguFormat.size = cfg.size;
 
 	int ret = imgu_->setFormat(pad, &imguFormat);

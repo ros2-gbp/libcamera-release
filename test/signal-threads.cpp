@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Cross-thread signal delivery test
+ * signal-threads.cpp - Cross-thread signal delivery test
  */
 
 #include <chrono>
@@ -10,7 +10,6 @@
 #include <thread>
 
 #include <libcamera/base/message.h>
-#include <libcamera/base/object.h>
 #include <libcamera/base/thread.h>
 #include <libcamera/base/utils.h>
 
@@ -59,20 +58,15 @@ private:
 class SignalThreadsTest : public Test
 {
 protected:
-	int init()
-	{
-		receiver_ = new SignalReceiver();
-		signal_.connect(receiver_, &SignalReceiver::slot);
-
-		return TestPass;
-	}
-
 	int run()
 	{
+		SignalReceiver receiver;
+		signal_.connect(&receiver, &SignalReceiver::slot);
+
 		/* Test that a signal is received in the main thread. */
 		signal_.emit(0);
 
-		switch (receiver_->status()) {
+		switch (receiver.status()) {
 		case SignalReceiver::NoSignal:
 			cout << "No signal received for direct connection" << endl;
 			return TestFail;
@@ -88,8 +82,8 @@ protected:
 		 * Move the object to a thread and verify that the signal is
 		 * correctly delivered, with the correct data.
 		 */
-		receiver_->reset();
-		receiver_->moveToThread(&thread_);
+		receiver.reset();
+		receiver.moveToThread(&thread_);
 
 		thread_.start();
 
@@ -97,7 +91,7 @@ protected:
 
 		this_thread::sleep_for(chrono::milliseconds(100));
 
-		switch (receiver_->status()) {
+		switch (receiver.status()) {
 		case SignalReceiver::NoSignal:
 			cout << "No signal received for message connection" << endl;
 			return TestFail;
@@ -109,7 +103,7 @@ protected:
 			break;
 		}
 
-		if (receiver_->value() != 42) {
+		if (receiver.value() != 42) {
 			cout << "Signal received with incorrect value" << endl;
 			return TestFail;
 		}
@@ -119,13 +113,11 @@ protected:
 
 	void cleanup()
 	{
-		receiver_->deleteLater();
 		thread_.exit(0);
 		thread_.wait();
 	}
 
 private:
-	SignalReceiver *receiver_;
 	Thread thread_;
 
 	Signal<int> signal_;

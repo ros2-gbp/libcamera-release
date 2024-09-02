@@ -4,7 +4,7 @@
 #
 # Author: Paul Elder <paul.elder@ideasonboard.com>
 #
-# Run mojo parser with python3
+# parser.py - Run mojo parser with python3
 
 import os
 import sys

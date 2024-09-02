@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Raspberry Pi Ltd
  *
- * device (image sensor) status
+ * device_status.cpp - device (image sensor) status
  */
 #include "device_status.h"
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022 - Jacopo Mondi <jacopo@jmondi.org>
  *
- * Pipeline handler for ISI interface found on NXP i.MX8 SoC
+ * imx8-isi.cpp - Pipeline handler for ISI interface found on NXP i.MX8 SoC
  */
 
 #include <algorithm>
@@ -554,7 +554,7 @@ CameraConfiguration::Status ISICameraConfiguration::validate()
 	PixelFormat pixelFormat = config_[0].pixelFormat;
 
 	V4L2SubdeviceFormat sensorFormat{};
-	sensorFormat.code = data_->getMediaBusFormat(&pixelFormat);
+	sensorFormat.mbus_code = data_->getMediaBusFormat(&pixelFormat);
 	sensorFormat.size = maxSize;
 
 	LOG(ISI, Debug) << "Computed sensor configuration: " << sensorFormat;
@@ -569,7 +569,7 @@ CameraConfiguration::Status ISICameraConfiguration::validate()
 	 * the smallest larger format without considering the aspect ratio
 	 * as the ISI can freely scale.
 	 */
-	auto sizes = sensor->sizes(sensorFormat.code);
+	auto sizes = sensor->sizes(sensorFormat.mbus_code);
 	Size bestSize;
 
 	for (const Size &s : sizes) {
@@ -595,7 +595,7 @@ CameraConfiguration::Status ISICameraConfiguration::validate()
 		return Invalid;
 	}
 
-	sensorFormat_.code = sensorFormat.code;
+	sensorFormat_.mbus_code = sensorFormat.mbus_code;
 	sensorFormat_.size = bestSize;
 
 	LOG(ISI, Debug) << "Selected sensor format: " << sensorFormat_;
@@ -632,7 +632,7 @@ StreamConfiguration PipelineHandlerISI::generateYUVConfiguration(Camera *camera,
 
 	/* Adjust the requested size to the sensor's capabilities. */
 	V4L2SubdeviceFormat sensorFmt;
-	sensorFmt.code = mbusCode;
+	sensorFmt.mbus_code = mbusCode;
 	sensorFmt.size = size;
 
 	int ret = data->sensor_->tryFormat(&sensorFmt);
@@ -827,10 +827,16 @@ int PipelineHandlerISI::configure(Camera *camera, CameraConfiguration *c)
 	unsigned int xbarFirstSource = crossbar_->entity()->pads().size() / 2 + 1;
 
 	for (const auto &[idx, config] : utils::enumerate(*c)) {
-		uint32_t sourcePad = xbarFirstSource + idx;
-		routing.emplace_back(V4L2Subdevice::Stream{ data->xbarSink_, 0 },
-				     V4L2Subdevice::Stream{ sourcePad, 0 },
-				     V4L2_SUBDEV_ROUTE_FL_ACTIVE);
+		struct v4l2_subdev_route route = {
+			.sink_pad = data->xbarSink_,
+			.sink_stream = 0,
+			.source_pad = static_cast<uint32_t>(xbarFirstSource + idx),
+			.source_stream = 0,
+			.flags = V4L2_SUBDEV_ROUTE_FL_ACTIVE,
+			.reserved = {}
+		};
+
+		routing.push_back(route);
 	}
 
 	int ret = crossbar_->setRouting(&routing, V4L2Subdevice::ActiveFormat);
@@ -885,7 +891,7 @@ int PipelineHandlerISI::configure(Camera *camera, CameraConfiguration *c)
 		unsigned int isiCode = ISICameraConfiguration::formatsMap_.at(config.pixelFormat);
 
 		V4L2SubdeviceFormat isiFormat{};
-		isiFormat.code = isiCode;
+		isiFormat.mbus_code = isiCode;
 		isiFormat.size = config.size;
 
 		ret = pipe->isi->setFormat(1, &isiFormat);
@@ -1112,6 +1118,6 @@ void PipelineHandlerISI::bufferReady(FrameBuffer *buffer)
 	completeRequest(request);
 }
 
-REGISTER_PIPELINE_HANDLER(PipelineHandlerISI, "imx8-isi")
+REGISTER_PIPELINE_HANDLER(PipelineHandlerISI)
 
 } /* namespace libcamera */

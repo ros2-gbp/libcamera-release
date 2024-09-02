@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * IPU3 IPA Context
+ * ipa_context.cpp - IPU3 IPA Context
  */
 
 #include "ipa_context.h"
@@ -47,9 +47,6 @@ namespace libcamera::ipa::ipu3 {
  *
  * \var IPAContext::activeState
  * \brief The current state of IPA algorithms
- *
- * \var IPAContext::ctrlMap
- * \brief A ControlInfoMap::Map of controls populated by the algorithms
  */
 
 /**

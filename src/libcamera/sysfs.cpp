@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Miscellaneous utility functions to access sysfs
+ * sysfs.cpp - Miscellaneous utility functions to access sysfs
  */
 
 #include "libcamera/internal/sysfs.h"

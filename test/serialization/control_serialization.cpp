@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Serialize and deserialize controls
+ * control_serialization.cpp - Serialize and deserialize controls
  */
 
 #include <iostream>

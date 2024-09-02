@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Video stream for a Camera
+ * stream.cpp - Video stream for a Camera
  */
 
 #include <libcamera/stream.h>
@@ -311,8 +311,7 @@ StreamConfiguration::StreamConfiguration(const StreamFormats &formats)
  * The stride value reports the number of bytes between the beginning of
  * successive lines in an image buffer for this stream. The value is
  * valid after successfully validating the configuration with a call to
- * CameraConfiguration::validate(). For compressed formats (such as MJPEG),
- * this value will be zero.
+ * CameraConfiguration::validate().
  */
 
 /**
@@ -433,7 +432,7 @@ std::ostream &operator<<(std::ostream &out, StreamRole role)
 		"Viewfinder",
 	};
 
-	out << names[utils::to_underlying(role)];
+	out << names[static_cast<std::underlying_type_t<StreamRole>>(role)];
 	return out;
 }
 

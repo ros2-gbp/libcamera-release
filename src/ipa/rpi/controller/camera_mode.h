@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019-2020, Raspberry Pi Ltd
  *
- * description of a particular operating mode of a sensor
+ * camera_mode.h - description of a particular operating mode of a sensor
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas on Board Oy
  *
- * Base Frame Sink Class
+ * frame_sink.h - Base Frame Sink Class
  */
 
 #pragma once

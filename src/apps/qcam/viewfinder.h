@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * qcam - Viewfinder base class
+ * viewfinder.h - qcam - Viewfinder base class
  */
 
 #pragma once

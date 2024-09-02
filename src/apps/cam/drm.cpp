@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas on Board Oy
  *
- * DRM/KMS Helpers
+ * drm.cpp - DRM/KMS Helpers
  */
 
 #include "drm.h"

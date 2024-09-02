@@ -59,7 +59,7 @@ document:
   underscores in between
 * All formatting rules specified in the selected sections of the Linux kernel
   Code Style for indentation, braces, spacing, etc
-* Headers are guarded by the use of '#pragma once'
+* Header guards are formatted as '__LIBCAMERA_FILE_NAME_H__'
 
 Order of Includes
 ~~~~~~~~~~~~~~~~~

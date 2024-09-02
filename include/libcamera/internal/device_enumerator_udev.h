@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018-2019, Google Inc.
  *
- * udev-based device enumerator
+ * device_enumerator_udev.h - udev-based device enumerator
  */
 
 #pragma once

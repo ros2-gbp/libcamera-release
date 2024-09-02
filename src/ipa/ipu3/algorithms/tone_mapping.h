@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google inc.
  *
- * IPU3 ToneMapping and Gamma control
+ * tone_mapping.h - IPU3 ToneMapping and Gamma control
  */
 
 #pragma once

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google inc.
  *
- * IPU3 Black Level Correction control
+ * black_correction.h - IPU3 Black Level Correction control
  */
 
 #pragma once

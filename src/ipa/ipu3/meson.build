@@ -15,8 +15,9 @@ ipu3_ipa_sources += ipu3_ipa_algorithms
 mod = shared_module(ipa_name,
                     [ipu3_ipa_sources, libcamera_generated_ipa_headers],
                     name_prefix : '',
-                    include_directories : [ipa_includes],
-                    dependencies : [libcamera_private, libipa_dep],
+                    include_directories : [ipa_includes, libipa_includes],
+                    dependencies : libcamera_private,
+                    link_with : libipa,
                     install : true,
                     install_dir : ipa_install_dir)
 

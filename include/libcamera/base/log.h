@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * Logging infrastructure
+ * log.h - Logging infrastructure
  */
 
 #pragma once
@@ -48,7 +48,6 @@ private:
 extern const LogCategory &_LOG_CATEGORY(name)();
 
 #define LOG_DEFINE_CATEGORY(name)					\
-LOG_DECLARE_CATEGORY(name)						\
 const LogCategory &_LOG_CATEGORY(name)()				\
 {									\
 	/* The instance will be deleted by the Logger destructor. */	\

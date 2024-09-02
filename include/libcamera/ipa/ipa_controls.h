@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * IPA Control handling
+ * ipa_controls.h - IPA Control handling
  */
 
 #pragma once

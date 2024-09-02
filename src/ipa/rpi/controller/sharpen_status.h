@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * Sharpen control algorithm status
+ * sharpen_status.h - Sharpen control algorithm status
  */
 #pragma once
 

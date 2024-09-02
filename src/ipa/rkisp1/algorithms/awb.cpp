@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021-2022, Ideas On Board
  *
- * AWB control algorithm
+ * awb.cpp - AWB control algorithm
  */
 
 #include "awb.h"
@@ -120,14 +120,10 @@ void Awb::prepare(IPAContext &context, const uint32_t frame,
 		frameContext.awb.gains.blue = context.activeState.awb.gains.automatic.blue;
 	}
 
-	params->others.awb_gain_config.gain_green_b =
-		std::clamp<int>(256 * frameContext.awb.gains.green, 0, 0x3ff);
-	params->others.awb_gain_config.gain_blue =
-		std::clamp<int>(256 * frameContext.awb.gains.blue, 0, 0x3ff);
-	params->others.awb_gain_config.gain_red =
-		std::clamp<int>(256 * frameContext.awb.gains.red, 0, 0x3ff);
-	params->others.awb_gain_config.gain_green_r =
-		std::clamp<int>(256 * frameContext.awb.gains.green, 0, 0x3ff);
+	params->others.awb_gain_config.gain_green_b = 256 * frameContext.awb.gains.green;
+	params->others.awb_gain_config.gain_blue = 256 * frameContext.awb.gains.blue;
+	params->others.awb_gain_config.gain_red = 256 * frameContext.awb.gains.red;
+	params->others.awb_gain_config.gain_green_r = 256 * frameContext.awb.gains.green;
 
 	/* Update the gains. */
 	params->module_cfg_update |= RKISP1_CIF_ISP_MODULE_AWB_GAIN;
@@ -222,12 +218,6 @@ void Awb::process(IPAContext &context,
 	double redMean;
 	double blueMean;
 
-	metadata.set(controls::AwbEnable, frameContext.awb.autoEnabled);
-	metadata.set(controls::ColourGains, {
-			static_cast<float>(frameContext.awb.gains.red),
-			static_cast<float>(frameContext.awb.gains.blue)
-		});
-
 	if (rgbMode_) {
 		greenMean = awb->awb_mean[0].mean_y_or_g;
 		redMean = awb->awb_mean[0].mean_cr_or_r;
@@ -283,14 +273,11 @@ void Awb::process(IPAContext &context,
 	 */
 	if (redMean < kMeanMinThreshold && greenMean < kMeanMinThreshold &&
 	    blueMean < kMeanMinThreshold) {
-		metadata.set(controls::ColourTemperature, activeState.awb.temperatureK);
+		frameContext.awb.temperatureK = activeState.awb.temperatureK;
 		return;
 	}
 
 	activeState.awb.temperatureK = estimateCCT(redMean, greenMean, blueMean);
-
-	/* Metadata shall contain the up to date measurement */
-	metadata.set(controls::ColourTemperature, activeState.awb.temperatureK);
 
 	/*
 	 * Estimate the red and blue gains to apply in a grey world. The green
@@ -318,12 +305,21 @@ void Awb::process(IPAContext &context,
 	activeState.awb.gains.automatic.blue = blueGain;
 	activeState.awb.gains.automatic.green = 1.0;
 
+	frameContext.awb.temperatureK = activeState.awb.temperatureK;
+
+	metadata.set(controls::AwbEnable, frameContext.awb.autoEnabled);
+	metadata.set(controls::ColourGains, {
+			static_cast<float>(frameContext.awb.gains.red),
+			static_cast<float>(frameContext.awb.gains.blue)
+		});
+	metadata.set(controls::ColourTemperature, frameContext.awb.temperatureK);
+
 	LOG(RkISP1Awb, Debug) << std::showpoint
 		<< "Means [" << redMean << ", " << greenMean << ", " << blueMean
 		<< "], gains [" << activeState.awb.gains.automatic.red << ", "
 		<< activeState.awb.gains.automatic.green << ", "
 		<< activeState.awb.gains.automatic.blue << "], temp "
-		<< activeState.awb.temperatureK << "K";
+		<< frameContext.awb.temperatureK << "K";
 }
 
 REGISTER_IPA_ALGORITHM(Awb, "Awb")

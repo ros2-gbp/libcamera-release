@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Mapped Framebuffer support
+ * mapped_framebuffer.cpp - Mapped Framebuffer support
  */
 
 #include "libcamera/internal/mapped_framebuffer.h"

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas On Board
  *
- * IPU3 IPA Module
+ * module.h - IPU3 IPA Module
  */
 
 #pragma once

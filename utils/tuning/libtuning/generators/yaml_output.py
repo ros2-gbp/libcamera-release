@@ -2,16 +2,15 @@
 #
 # Copyright 2022 Paul Elder <paul.elder@ideasonboard.com>
 #
-# Generate tuning file in YAML format
+# yaml_output.py - Generate tuning file in YAML format
 
 from .generator import Generator
 
 from numbers import Number
 from pathlib import Path
 
-import logging
+import libtuning.utils as utils
 
-logger = logging.getLogger(__name__)
 
 class YamlOutput(Generator):
     def __init__(self):
@@ -107,16 +106,13 @@ class YamlOutput(Generator):
         ]
 
         for module in output_order:
-            if module not in output_dict:
-                continue
-
             out_lines.append(f'  - {module.out_name}:')
 
             if len(output_dict[module]) == 0:
                 continue
 
             if not isinstance(output_dict[module], dict):
-                logger.error(f'Error: Output of {module.type} is not a dictionary')
+                utils.eprint(f'Error: Output of {module.type} is not a dictionary')
                 continue
 
             lines = self._stringify_dict(output_dict[module])

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * Media device objects: entities, pads and links
+ * media_object.cpp - Media device objects: entities, pads and links
  */
 
 #include "libcamera/internal/media_object.h"

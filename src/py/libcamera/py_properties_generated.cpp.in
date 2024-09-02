@@ -11,20 +11,20 @@
 
 #include <pybind11/pybind11.h>
 
-#include "py_main.h"
-
 namespace py = pybind11;
 
 class PyProperties
 {
 };
 
-${vendors_class_def}
+class PyDraftProperties
+{
+};
 
 void init_py_properties_generated(py::module& m)
 {
 	auto controls = py::class_<PyProperties>(m, "properties");
-${vendors_defs}
+	auto draft = py::class_<PyDraftProperties>(controls, "draft");
 
 ${controls}
 }

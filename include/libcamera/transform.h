@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Raspberry Pi Ltd
  *
- * 2D plane transforms
+ * transform.h - 2D plane transforms
  */
 
 #pragma once
@@ -10,8 +10,6 @@
 #include <string>
 
 namespace libcamera {
-
-enum class Orientation;
 
 enum class Transform : int {
 	Identity = 0,
@@ -71,9 +69,6 @@ constexpr Transform operator~(Transform t)
 }
 
 Transform transformFromRotation(int angle, bool *success = nullptr);
-
-Transform operator/(const Orientation &o1, const Orientation &o2);
-Orientation operator*(const Orientation &o, const Transform &t);
 
 const char *transformToString(Transform t);
 

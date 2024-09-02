@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas on Board Oy.
  *
- * Stream colorspace adjustment test
+ * stream_colorspace.cpp - Stream colorspace adjustment test
  */
 
 #include <iostream>

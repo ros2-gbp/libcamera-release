@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Identify libcamera source and build paths
+ * source_paths.h - Identify libcamera source and build paths
  */
 
 #pragma once

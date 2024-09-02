@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Image Processing Algorithm IPC module for IPA proxies
+ * ipc_pipe.cpp - Image Processing Algorithm IPC module for IPA proxies
  */
 
 #include "libcamera/internal/ipc_pipe.h"

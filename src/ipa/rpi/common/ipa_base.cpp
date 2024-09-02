@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019-2023, Raspberry Pi Ltd
  *
- * Raspberry Pi IPA base class
+ * ipa_base.cpp - Raspberry Pi IPA base class
  */
 
 #include "ipa_base.h"
@@ -24,7 +24,6 @@
 #include "controller/ccm_status.h"
 #include "controller/contrast_algorithm.h"
 #include "controller/denoise_algorithm.h"
-#include "controller/hdr_algorithm.h"
 #include "controller/lux_status.h"
 #include "controller/sharpen_algorithm.h"
 #include "controller/statistics.h"
@@ -62,18 +61,12 @@ const ControlInfoMap::Map ipaControls{
 	{ &controls::AeConstraintMode, ControlInfo(controls::AeConstraintModeValues) },
 	{ &controls::AeExposureMode, ControlInfo(controls::AeExposureModeValues) },
 	{ &controls::ExposureValue, ControlInfo(-8.0f, 8.0f, 0.0f) },
-	{ &controls::AeFlickerMode, ControlInfo(static_cast<int>(controls::FlickerOff),
-						static_cast<int>(controls::FlickerManual),
-						static_cast<int>(controls::FlickerOff)) },
-	{ &controls::AeFlickerPeriod, ControlInfo(100, 1000000) },
 	{ &controls::Brightness, ControlInfo(-1.0f, 1.0f, 0.0f) },
 	{ &controls::Contrast, ControlInfo(0.0f, 32.0f, 1.0f) },
-	{ &controls::HdrMode, ControlInfo(controls::HdrModeValues) },
 	{ &controls::Sharpness, ControlInfo(0.0f, 16.0f, 1.0f) },
 	{ &controls::ScalerCrop, ControlInfo(Rectangle{}, Rectangle(65535, 65535, 65535, 65535), Rectangle{}) },
 	{ &controls::FrameDurationLimits, ControlInfo(INT64_C(33333), INT64_C(120000)) },
-	{ &controls::draft::NoiseReductionMode, ControlInfo(controls::draft::NoiseReductionModeValues) },
-	{ &controls::rpi::StatsOutputEnable, ControlInfo(false, true, false) },
+	{ &controls::draft::NoiseReductionMode, ControlInfo(controls::draft::NoiseReductionModeValues) }
 };
 
 /* IPA controls handled conditionally, if the sensor is not mono */
@@ -103,9 +96,8 @@ LOG_DEFINE_CATEGORY(IPARPI)
 namespace ipa::RPi {
 
 IpaBase::IpaBase()
-	: controller_(), frameLengths_(FrameLengthsQueueSize, 0s), statsMetadataOutput_(false),
-	  stitchSwapBuffers_(false), frameCount_(0), mistrustCount_(0), lastRunTimestamp_(0),
-	  firstStart_(true), flickerState_({ 0, 0s })
+	: controller_(), frameCount_(0), mistrustCount_(0), lastRunTimestamp_(0),
+	  firstStart_(true)
 {
 }
 
@@ -298,8 +290,6 @@ void IpaBase::start(const ControlList &controls, StartResult *result)
 		result->controls = std::move(ctrls);
 		setCameraTimeoutValue();
 	}
-	/* Make a note of this as it tells us the HDR status of the first few frames. */
-	hdrStatus_ = agcStatus.hdr;
 
 	/*
 	 * Initialise frame counts, and decide how many frames must be hidden or
@@ -347,8 +337,6 @@ void IpaBase::start(const ControlList &controls, StartResult *result)
 
 	firstStart_ = false;
 	lastRunTimestamp_ = 0;
-
-	platformStart(controls, result);
 }
 
 void IpaBase::mapBuffers(const std::vector<IPABuffer> &buffers)
@@ -403,17 +391,11 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 	 * sensor exposure/gain changes. So fetch it from the metadata list
 	 * indexed by the IPA cookie returned, and put it in the current frame
 	 * metadata.
-	 *
-	 * Note if the HDR mode has changed, as things like tonemaps may need updating.
 	 */
 	AgcStatus agcStatus;
-	bool hdrChange = false;
 	RPiController::Metadata &delayedMetadata = rpiMetadata_[params.delayContext];
-	if (!delayedMetadata.get<AgcStatus>("agc.status", agcStatus)) {
+	if (!delayedMetadata.get<AgcStatus>("agc.status", agcStatus))
 		rpiMetadata.set("agc.delayed_status", agcStatus);
-		hdrChange = agcStatus.hdr.mode != hdrStatus_.mode;
-		hdrStatus_ = agcStatus.hdr;
-	}
 
 	/*
 	 * This may overwrite the DeviceStatus using values from the sensor
@@ -424,7 +406,7 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 	/* Allow a 10% margin on the comparison below. */
 	Duration delta = (frameTimestamp - lastRunTimestamp_) * 1.0ns;
 	if (lastRunTimestamp_ && frameCount_ > dropFrameCount_ &&
-	    delta < controllerMinFrameDuration * 0.9 && !hdrChange) {
+	    delta < controllerMinFrameDuration * 0.9) {
 		/*
 		 * Ensure we merge the previous frame's metadata with the current
 		 * frame. This will not overwrite exposure/gain values for the
@@ -441,10 +423,11 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 	}
 
 	/*
-	 * If the statistics are inline (i.e. already available with the Bayer
-	 * frame), call processStats() now before prepare().
+	 * If a statistics buffer has been passed in, call processStats
+	 * directly now before prepare() since the statistics are available in-line
+	 * with the Bayer frame.
 	 */
-	if (controller_.getHardwareConfig().statsInline)
+	if (params.buffers.stats)
 		processStats({ params.buffers, params.ipaContext });
 
 	/* Do we need/want to call prepare? */
@@ -456,19 +439,15 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 
 	frameCount_++;
 
-	/* If the statistics are inline the metadata can be returned early. */
-	if (controller_.getHardwareConfig().statsInline)
-		reportMetadata(ipaContext);
-
 	/* Ready to push the input buffer into the ISP. */
-	prepareIspComplete.emit(params.buffers, stitchSwapBuffers_);
+	prepareIspComplete.emit(params.buffers);
 }
 
 void IpaBase::processStats(const ProcessParams &params)
 {
 	unsigned int ipaContext = params.ipaContext % rpiMetadata_.size();
 
-	if (processPending_ && frameCount_ >= mistrustCount_) {
+	if (processPending_ && frameCount_ > mistrustCount_) {
 		RPiController::Metadata &rpiMetadata = rpiMetadata_[ipaContext];
 
 		auto it = buffers_.find(params.buffers.stats);
@@ -478,9 +457,6 @@ void IpaBase::processStats(const ProcessParams &params)
 		}
 
 		RPiController::StatisticsPtr statistics = platformProcessStats(it->second.planes()[0]);
-
-		/* reportMetadata() will pick this up and set the FocusFoM metadata */
-		rpiMetadata.set("focus.status", statistics->focusRegions);
 
 		helper_->process(statistics, rpiMetadata);
 		controller_.process(statistics, &rpiMetadata);
@@ -494,13 +470,7 @@ void IpaBase::processStats(const ProcessParams &params)
 		}
 	}
 
-	/*
-	 * If the statistics are not inline the metadata must be returned now,
-	 * before the processStatsComplete signal.
-	 */
-	if (!controller_.getHardwareConfig().statsInline)
-		reportMetadata(ipaContext);
-
+	reportMetadata(ipaContext);
 	processStatsComplete.emit(params.buffers);
 }
 
@@ -544,33 +514,6 @@ void IpaBase::setMode(const IPACameraSensorInfo &sensorInfo)
 	mode_.maxLineLength = sensorInfo.maxLineLength * (1.0s / sensorInfo.pixelRate);
 
 	/*
-	 * Ensure that the maximum pixel processing rate does not exceed the ISP
-	 * hardware capabilities. If it does, try adjusting the minimum line
-	 * length to compensate if possible.
-	 */
-	Duration minPixelTime = controller_.getHardwareConfig().minPixelProcessingTime;
-	Duration pixelTime = mode_.minLineLength / mode_.width;
-	if (minPixelTime && pixelTime < minPixelTime) {
-		Duration adjustedLineLength = minPixelTime * mode_.width;
-		if (adjustedLineLength <= mode_.maxLineLength) {
-			LOG(IPARPI, Info)
-				<< "Adjusting mode minimum line length from " << mode_.minLineLength
-				<< " to " << adjustedLineLength << " because of ISP constraints.";
-			mode_.minLineLength = adjustedLineLength;
-		} else {
-			LOG(IPARPI, Error)
-				<< "Sensor minimum line length of " << pixelTime * mode_.width
-				<< " (" << 1us / pixelTime << " MPix/s)"
-				<< " is below the minimum allowable ISP limit of "
-				<< adjustedLineLength
-				<< " (" << 1us / minPixelTime << " MPix/s) ";
-			LOG(IPARPI, Error)
-				<< "THIS WILL CAUSE IMAGE CORRUPTION!!! "
-				<< "Please update the camera sensor driver to allow more horizontal blanking control.";
-		}
-	}
-
-	/*
 	 * Set the frame length limits for the mode to ensure exposure and
 	 * framerate calculations are clipped appropriately.
 	 */
@@ -592,12 +535,6 @@ void IpaBase::setMode(const IPACameraSensorInfo &sensorInfo)
 
 	mode_.minAnalogueGain = helper_->gain(gainCtrl.min().get<int32_t>());
 	mode_.maxAnalogueGain = helper_->gain(gainCtrl.max().get<int32_t>());
-
-	/*
-	 * We need to give the helper the min/max frame durations so it can calculate
-	 * the correct exposure limits below.
-	 */
-	helper_->setCameraMode(mode_);
 
 	/* Shutter speed is calculated based on the limits of the frame durations. */
 	mode_.minShutter = helper_->exposure(shutterCtrl.min().get<int32_t>(), mode_.minLineLength);
@@ -688,6 +625,14 @@ static const std::map<int32_t, std::string> AwbModeTable = {
 	{ controls::AwbCustom, "custom" },
 };
 
+static const std::map<int32_t, RPiController::DenoiseMode> DenoiseModeTable = {
+	{ controls::draft::NoiseReductionModeOff, RPiController::DenoiseMode::Off },
+	{ controls::draft::NoiseReductionModeFast, RPiController::DenoiseMode::ColourFast },
+	{ controls::draft::NoiseReductionModeHighQuality, RPiController::DenoiseMode::ColourHighQuality },
+	{ controls::draft::NoiseReductionModeMinimal, RPiController::DenoiseMode::ColourOff },
+	{ controls::draft::NoiseReductionModeZSL, RPiController::DenoiseMode::ColourHighQuality },
+};
+
 static const std::map<int32_t, RPiController::AfAlgorithm::AfMode> AfModeTable = {
 	{ controls::AfModeManual, RPiController::AfAlgorithm::AfModeManual },
 	{ controls::AfModeAuto, RPiController::AfAlgorithm::AfModeAuto },
@@ -706,21 +651,9 @@ static const std::map<int32_t, RPiController::AfAlgorithm::AfPause> AfPauseTable
 	{ controls::AfPauseResume, RPiController::AfAlgorithm::AfPauseResume },
 };
 
-static const std::map<int32_t, std::string> HdrModeTable = {
-	{ controls::HdrModeOff, "Off" },
-	{ controls::HdrModeMultiExposureUnmerged, "MultiExposureUnmerged" },
-	{ controls::HdrModeMultiExposure, "MultiExposure" },
-	{ controls::HdrModeSingleExposure, "SingleExposure" },
-	{ controls::HdrModeNight, "Night" },
-};
-
 void IpaBase::applyControls(const ControlList &controls)
 {
-	using RPiController::AgcAlgorithm;
 	using RPiController::AfAlgorithm;
-	using RPiController::ContrastAlgorithm;
-	using RPiController::DenoiseAlgorithm;
-	using RPiController::HdrAlgorithm;
 
 	/* Clear the return metadata buffer. */
 	libcameraMetadata_.clear();
@@ -777,7 +710,7 @@ void IpaBase::applyControls(const ControlList &controls)
 			}
 
 			/* The control provides units of microseconds. */
-			agc->setFixedShutter(0, ctrl.second.get<int32_t>() * 1.0us);
+			agc->setFixedShutter(ctrl.second.get<int32_t>() * 1.0us);
 
 			libcameraMetadata_.set(controls::ExposureTime, ctrl.second.get<int32_t>());
 			break;
@@ -792,7 +725,7 @@ void IpaBase::applyControls(const ControlList &controls)
 				break;
 			}
 
-			agc->setFixedAnalogueGain(0, ctrl.second.get<float>());
+			agc->setFixedAnalogueGain(ctrl.second.get<float>());
 
 			libcameraMetadata_.set(controls::AnalogueGain,
 					       ctrl.second.get<float>());
@@ -873,67 +806,9 @@ void IpaBase::applyControls(const ControlList &controls)
 			 * So convert to 2^EV
 			 */
 			double ev = pow(2.0, ctrl.second.get<float>());
-			agc->setEv(0, ev);
+			agc->setEv(ev);
 			libcameraMetadata_.set(controls::ExposureValue,
 					       ctrl.second.get<float>());
-			break;
-		}
-
-		case controls::AE_FLICKER_MODE: {
-			RPiController::AgcAlgorithm *agc = dynamic_cast<RPiController::AgcAlgorithm *>(
-				controller_.getAlgorithm("agc"));
-			if (!agc) {
-				LOG(IPARPI, Warning)
-					<< "Could not set AeFlickerMode - no AGC algorithm";
-				break;
-			}
-
-			int32_t mode = ctrl.second.get<int32_t>();
-			bool modeValid = true;
-
-			switch (mode) {
-			case controls::FlickerOff:
-				agc->setFlickerPeriod(0us);
-
-				break;
-
-			case controls::FlickerManual:
-				agc->setFlickerPeriod(flickerState_.manualPeriod);
-
-				break;
-
-			default:
-				LOG(IPARPI, Error) << "Flicker mode " << mode << " is not supported";
-				modeValid = false;
-
-				break;
-			}
-
-			if (modeValid)
-				flickerState_.mode = mode;
-
-			break;
-		}
-
-		case controls::AE_FLICKER_PERIOD: {
-			RPiController::AgcAlgorithm *agc = dynamic_cast<RPiController::AgcAlgorithm *>(
-				controller_.getAlgorithm("agc"));
-			if (!agc) {
-				LOG(IPARPI, Warning)
-					<< "Could not set AeFlickerPeriod - no AGC algorithm";
-				break;
-			}
-
-			uint32_t manualPeriod = ctrl.second.get<int32_t>();
-			flickerState_.manualPeriod = manualPeriod * 1.0us;
-
-			/*
-			 * We note that it makes no difference if the mode gets set to "manual"
-			 * first, and the period updated after, or vice versa.
-			 */
-			if (flickerState_.mode == controls::FlickerManual)
-				agc->setFlickerPeriod(flickerState_.manualPeriod);
-
 			break;
 		}
 
@@ -1081,11 +956,36 @@ void IpaBase::applyControls(const ControlList &controls)
 			break;
 		}
 
-		case controls::draft::NOISE_REDUCTION_MODE:
-			/* Handled below in handleControls() */
-			libcameraMetadata_.set(controls::draft::NoiseReductionMode,
-					       ctrl.second.get<int32_t>());
+		case controls::NOISE_REDUCTION_MODE: {
+			RPiController::DenoiseAlgorithm *sdn = dynamic_cast<RPiController::DenoiseAlgorithm *>(
+				controller_.getAlgorithm("SDN"));
+			/* Some platforms may have a combined "denoise" algorithm instead. */
+			if (!sdn)
+				sdn = dynamic_cast<RPiController::DenoiseAlgorithm *>(
+				controller_.getAlgorithm("denoise"));
+			if (!sdn) {
+				LOG(IPARPI, Warning)
+					<< "Could not set NOISE_REDUCTION_MODE - no SDN algorithm";
+				break;
+			}
+
+			int32_t idx = ctrl.second.get<int32_t>();
+			auto mode = DenoiseModeTable.find(idx);
+			if (mode != DenoiseModeTable.end()) {
+				sdn->setMode(mode->second);
+
+				/*
+				 * \todo If the colour denoise is not going to run due to an
+				 * analysis image resolution or format mismatch, we should
+				 * report the status correctly in the metadata.
+				 */
+				libcameraMetadata_.set(controls::draft::NoiseReductionMode, idx);
+			} else {
+				LOG(IPARPI, Error) << "Noise reduction mode " << idx
+						   << " not recognised";
+			}
 			break;
+		}
 
 		case controls::AF_MODE:
 			break; /* We already handled this one above */
@@ -1192,61 +1092,6 @@ void IpaBase::applyControls(const ControlList &controls)
 			break;
 		}
 
-		case controls::HDR_MODE: {
-			HdrAlgorithm *hdr = dynamic_cast<HdrAlgorithm *>(controller_.getAlgorithm("hdr"));
-			if (!hdr) {
-				LOG(IPARPI, Warning) << "No HDR algorithm available";
-				break;
-			}
-
-			auto mode = HdrModeTable.find(ctrl.second.get<int32_t>());
-			if (mode == HdrModeTable.end()) {
-				LOG(IPARPI, Warning) << "Unrecognised HDR mode";
-				break;
-			}
-
-			AgcAlgorithm *agc = dynamic_cast<AgcAlgorithm *>(controller_.getAlgorithm("agc"));
-			if (!agc) {
-				LOG(IPARPI, Warning) << "HDR requires an AGC algorithm";
-				break;
-			}
-
-			if (hdr->setMode(mode->second) == 0) {
-				agc->setActiveChannels(hdr->getChannels());
-
-				/* We also disable adpative contrast enhancement if HDR is running. */
-				ContrastAlgorithm *contrast =
-					dynamic_cast<ContrastAlgorithm *>(controller_.getAlgorithm("contrast"));
-				if (contrast) {
-					if (mode->second == "Off")
-						contrast->restoreCe();
-					else
-						contrast->enableCe(false);
-				}
-
-				DenoiseAlgorithm *denoise =
-					dynamic_cast<DenoiseAlgorithm *>(controller_.getAlgorithm("denoise"));
-				if (denoise) {
-					/* \todo - make the HDR mode say what denoise it wants? */
-					if (mode->second == "Night")
-						denoise->setConfig("night");
-					else if (mode->second == "SingleExposure")
-						denoise->setConfig("hdr");
-					/* MultiExposure doesn't need extra extra denoise. */
-					else
-						denoise->setConfig("normal");
-				}
-			} else
-				LOG(IPARPI, Warning)
-					<< "HDR mode " << mode->second << " not supported";
-
-			break;
-		}
-
-		case controls::rpi::STATS_OUTPUT_ENABLE:
-			statsMetadataOutput_ = ctrl.second.get<bool>();
-			break;
-
 		default:
 			LOG(IPARPI, Warning)
 				<< "Ctrl " << controls::controls.at(ctrl.first)->name()
@@ -1306,10 +1151,10 @@ void IpaBase::reportMetadata(unsigned int ipaContext)
 			libcameraMetadata_.set(controls::LensPosition, *deviceStatus->lensPosition);
 	}
 
-	AgcPrepareStatus *agcPrepareStatus = rpiMetadata.getLocked<AgcPrepareStatus>("agc.prepare_status");
-	if (agcPrepareStatus) {
-		libcameraMetadata_.set(controls::AeLocked, agcPrepareStatus->locked);
-		libcameraMetadata_.set(controls::DigitalGain, agcPrepareStatus->digitalGain);
+	AgcStatus *agcStatus = rpiMetadata.getLocked<AgcStatus>("agc.status");
+	if (agcStatus) {
+		libcameraMetadata_.set(controls::AeLocked, agcStatus->locked);
+		libcameraMetadata_.set(controls::DigitalGain, agcStatus->digitalGain);
 	}
 
 	LuxStatus *luxStatus = rpiMetadata.getLocked<LuxStatus>("lux.status");
@@ -1352,7 +1197,7 @@ void IpaBase::reportMetadata(unsigned int ipaContext)
 			}
 		}
 
-		uint32_t focusFoM = sum / numRegions;
+		uint32_t focusFoM = (sum / numRegions) >> 16;
 		libcameraMetadata_.set(controls::FocusFoM, focusFoM);
 	}
 
@@ -1392,35 +1237,6 @@ void IpaBase::reportMetadata(unsigned int ipaContext)
 		}
 		libcameraMetadata_.set(controls::AfState, s);
 		libcameraMetadata_.set(controls::AfPauseState, p);
-	}
-
-	/*
-	 * THe HDR algorithm sets the HDR channel into the agc.status at the time that those
-	 * AGC parameters were calculated several frames ago, so it comes back to us now in
-	 * the delayed_status. If this frame is too soon after a mode switch for the
-	 * delayed_status to be available, we use the HDR status that came out of the
-	 * switchMode call.
-	 */
-	const AgcStatus *agcStatus = rpiMetadata.getLocked<AgcStatus>("agc.delayed_status");
-	const HdrStatus &hdrStatus = agcStatus ? agcStatus->hdr : hdrStatus_;
-	if (!hdrStatus.mode.empty() && hdrStatus.mode != "Off") {
-		int32_t hdrMode = controls::HdrModeOff;
-		for (auto const &[mode, name] : HdrModeTable) {
-			if (hdrStatus.mode == name) {
-				hdrMode = mode;
-				break;
-			}
-		}
-		libcameraMetadata_.set(controls::HdrMode, hdrMode);
-
-		if (hdrStatus.channel == "short")
-			libcameraMetadata_.set(controls::HdrChannel, controls::HdrChannelShort);
-		else if (hdrStatus.channel == "long")
-			libcameraMetadata_.set(controls::HdrChannel, controls::HdrChannelLong);
-		else if (hdrStatus.channel == "medium")
-			libcameraMetadata_.set(controls::HdrChannel, controls::HdrChannelMedium);
-		else
-			libcameraMetadata_.set(controls::HdrChannel, controls::HdrChannelNone);
 	}
 
 	metadataReady.emit(libcameraMetadata_);

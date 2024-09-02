@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Google Inc.
  *
- * HAL Frame Buffer Handling
+ * hal_framebuffer.cpp - HAL Frame Buffer Handling
  */
 
 #include "hal_framebuffer.h"

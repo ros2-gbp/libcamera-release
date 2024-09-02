@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022, Paul Elder <paul.elder@ideasonboard.com>
 #
-# Wrapper for cv2 smoothing functions to enable duck-typing
+# smoothing.py - Wrapper for cv2 smoothing functions to enable duck-typing
 
 import cv2
 

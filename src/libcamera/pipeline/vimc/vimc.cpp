@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * Pipeline handler for the vimc device
+ * vimc.cpp - Pipeline handler for the vimc device
  */
 
 #include <algorithm>
@@ -114,9 +114,6 @@ static const std::map<PixelFormat, uint32_t> pixelformats{
 	{ formats::BGR888, MEDIA_BUS_FMT_RGB888_1X24 },
 };
 
-static constexpr Size kMinSize{ 16, 16 };
-static constexpr Size kMaxSize{ 4096, 2160 };
-
 } /* namespace */
 
 VimcCameraConfiguration::VimcCameraConfiguration(VimcCameraData *data)
@@ -131,8 +128,8 @@ CameraConfiguration::Status VimcCameraConfiguration::validate()
 	if (config_.empty())
 		return Invalid;
 
-	if (orientation != Orientation::Rotate0) {
-		orientation = Orientation::Rotate0;
+	if (transform != Transform::Identity) {
+		transform = Transform::Identity;
 		status = Adjusted;
 	}
 
@@ -156,20 +153,14 @@ CameraConfiguration::Status VimcCameraConfiguration::validate()
 	const Size size = cfg.size;
 
 	/*
-	 * The sensor output size is aligned to two pixels in both directions.
-	 * Additionally, prior to v5.16, the scaler hardcodes a x3 scale-up
-	 * ratio, requiring the output width and height to be multiples of 6.
+	 * The scaler hardcodes a x3 scale-up ratio, and the sensor output size
+	 * is aligned to two pixels in both directions. The output width and
+	 * height thus have to be multiples of 6.
 	 */
-	Size minSize{ kMinSize };
-	unsigned int alignment = 2;
-
-	if (data_->media_->version() < KERNEL_VERSION(5, 16, 0)) {
-		minSize *= 3;
-		alignment *= 3;
-	}
-
-	cfg.size.expandTo(minSize).boundTo(kMaxSize)
-		.alignDownTo(alignment, alignment);
+	cfg.size.width = std::max(48U, std::min(4096U, cfg.size.width));
+	cfg.size.height = std::max(48U, std::min(2160U, cfg.size.height));
+	cfg.size.width -= cfg.size.width % 6;
+	cfg.size.height -= cfg.size.height % 6;
 
 	if (cfg.size != size) {
 		LOG(VIMC, Debug)
@@ -225,12 +216,10 @@ PipelineHandlerVimc::generateConfiguration(Camera *camera,
 			}
 		}
 
-		/* Prior to v5.16, the scaler hardcodes a x3 scale-up ratio. */
-		Size minSize{ kMinSize };
-		if (data->media_->version() < KERNEL_VERSION(5, 16, 0))
-			minSize *= 3;
-
-		std::vector<SizeRange> sizes{ { minSize, kMaxSize } };
+		/* The scaler hardcodes a x3 scale-up ratio. */
+		std::vector<SizeRange> sizes{
+			SizeRange{ { 48, 48 }, { 4096, 2160 } }
+		};
 		formats[pixelformat.first] = sizes;
 	}
 
@@ -253,18 +242,10 @@ int PipelineHandlerVimc::configure(Camera *camera, CameraConfiguration *config)
 	StreamConfiguration &cfg = config->at(0);
 	int ret;
 
-	/*
-	 * Prior to v5.16, the scaler hardcodes a x3 scale-up ratio. For newer
-	 * kernels, use a sensor resolution of 1920x1080 and let the scaler
-	 * produce the requested stream size.
-	 */
-	Size sensorSize{ 1920, 1080 };
-	if (data->media_->version() < KERNEL_VERSION(5, 16, 0))
-		sensorSize = { cfg.size.width / 3, cfg.size.height / 3 };
-
+	/* The scaler hardcodes a x3 scale-up ratio. */
 	V4L2SubdeviceFormat subformat = {};
-	subformat.code = MEDIA_BUS_FMT_SGRBG8_1X8;
-	subformat.size = sensorSize;
+	subformat.mbus_code = MEDIA_BUS_FMT_SGRBG8_1X8;
+	subformat.size = { cfg.size.width / 3, cfg.size.height / 3 };
 
 	ret = data->sensor_->setFormat(&subformat);
 	if (ret)
@@ -274,7 +255,7 @@ int PipelineHandlerVimc::configure(Camera *camera, CameraConfiguration *config)
 	if (ret)
 		return ret;
 
-	subformat.code = pixelformats.find(cfg.pixelFormat)->second;
+	subformat.mbus_code = pixelformats.find(cfg.pixelFormat)->second;
 	ret = data->debayer_->setFormat(1, &subformat);
 	if (ret)
 		return ret;
@@ -312,7 +293,7 @@ int PipelineHandlerVimc::configure(Camera *camera, CameraConfiguration *config)
 	 * vimc driver will fail pipeline validation.
 	 */
 	format.fourcc = V4L2PixelFormat(V4L2_PIX_FMT_SGRBG8);
-	format.size = sensorSize;
+	format.size = { cfg.size.width / 3, cfg.size.height / 3 };
 
 	ret = data->raw_->setFormat(&format);
 	if (ret)
@@ -642,6 +623,6 @@ void VimcCameraData::paramsBufferReady([[maybe_unused]] unsigned int id,
 {
 }
 
-REGISTER_PIPELINE_HANDLER(PipelineHandlerVimc, "vimc")
+REGISTER_PIPELINE_HANDLER(PipelineHandlerVimc)
 
 } /* namespace libcamera */

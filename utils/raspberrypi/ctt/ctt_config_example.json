@@ -3,8 +3,7 @@
   "plot": [],
   "alsc": {
     "do_alsc_colour": 1,
-    "luminance_strength": 0.8,
-    "max_gain": 8.0
+    "luminance_strength": 0.5
   },
   "awb": {
     "greyworld": 0

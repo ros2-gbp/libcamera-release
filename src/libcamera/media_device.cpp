@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * Media device handler
+ * media_device.cpp - Media device handler
  */
 
 #include "libcamera/internal/media_device.h"

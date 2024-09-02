@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * FrameBuffer allocator
+ * framebuffer_allocator.h - FrameBuffer allocator
  */
 
 #pragma once

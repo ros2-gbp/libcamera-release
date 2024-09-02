@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * histogram calculations
+ * histogram.cpp - histogram calculations
  */
 #include "histogram.h"
 
@@ -29,32 +29,16 @@ namespace ipa {
  */
 
 /**
- * \fn Histogram::Histogram()
- * \brief Construct an empty Histogram
- *
- * This empty constructor exists largely to allow Histograms to be embedded in
- * other classes which may be created before the contents of the Histogram are
- * known.
- */
-
-/**
  * \brief Create a cumulative histogram
- * \param[in] data A (non-cumulative) histogram
+ * \param[in] data A pre-sorted histogram to be passed
  */
 Histogram::Histogram(Span<const uint32_t> data)
 {
-	cumulative_.resize(data.size() + 1);
-	cumulative_[0] = 0;
-	for (const auto &[i, value] : utils::enumerate(data))
-		cumulative_[i + 1] = cumulative_[i] + value;
+	cumulative_.reserve(data.size());
+	cumulative_.push_back(0);
+	for (const uint32_t &value : data)
+		cumulative_.push_back(cumulative_.back() + value);
 }
-
-/**
- * \fn Histogram::Histogram(Span<const uint32_t> data, Transform transform)
- * \brief Create a cumulative histogram
- * \param[in] data A (non-cumulative) histogram
- * \param[in] transform The transformation function to apply to every bin
- */
 
 /**
  * \fn Histogram::bins()

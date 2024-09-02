@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Event test
+ * event.cpp - Event test
  */
 
 #include <iostream>

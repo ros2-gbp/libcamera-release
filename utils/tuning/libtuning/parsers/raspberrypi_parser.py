@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022, Paul Elder <paul.elder@ideasonboard.com>
 #
-# Parser for Raspberry Pi config file format
+# raspberrypi_parser.py - Parser for Raspberry Pi config file format
 
 from .parser import Parser
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Helper class that performs sensor-specific parameter computations
+ * camera_sensor_helper.h - Helper class that performs sensor-specific parameter computations
  */
 
 #pragma once
@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,7 +25,6 @@ public:
 	CameraSensorHelper() = default;
 	virtual ~CameraSensorHelper() = default;
 
-	std::optional<int16_t> blackLevel() const { return blackLevel_; }
 	virtual uint32_t gainCode(double gain) const;
 	virtual double gain(uint32_t gainCode) const;
 
@@ -53,7 +51,6 @@ protected:
 		AnalogueGainExpConstants exp;
 	};
 
-	std::optional<int16_t> blackLevel_;
 	AnalogueGainType gainType_;
 	AnalogueGainConstants gainConstants_;
 
@@ -91,7 +88,7 @@ public:
 	}
 
 private:
-	std::unique_ptr<CameraSensorHelper> createInstance() const override
+	std::unique_ptr<CameraSensorHelper> createInstance() const
 	{
 		return std::make_unique<_Helper>();
 	}

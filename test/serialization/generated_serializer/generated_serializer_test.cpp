@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Test generated serializer
+ * generated_serializer_test.cpp - Test generated serializer
  */
 
 #include <algorithm>

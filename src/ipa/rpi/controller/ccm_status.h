@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * CCM (colour correction matrix) control algorithm status
+ * ccm_status.h - CCM (colour correction matrix) control algorithm status
  */
 #pragma once
 

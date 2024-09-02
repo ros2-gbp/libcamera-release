@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Generic timer
+ * timer.h - Generic timer
  */
 
 #pragma once

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * cam - Options parsing
+ * options.cpp - cam - Options parsing
  */
 
 #include <assert.h>

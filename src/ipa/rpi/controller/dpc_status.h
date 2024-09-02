@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * DPC (defective pixel correction) control algorithm status
+ * dpc_status.h - DPC (defective pixel correction) control algorithm status
  */
 #pragma once
 

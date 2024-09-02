@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Test the IPA interface
+ * ipa_interface_test.cpp - Test the IPA interface
  */
 
 #include <fcntl.h>
@@ -16,7 +16,6 @@
 
 #include <libcamera/base/event_dispatcher.h>
 #include <libcamera/base/event_notifier.h>
-#include <libcamera/base/object.h>
 #include <libcamera/base/thread.h>
 #include <libcamera/base/timer.h>
 
@@ -56,7 +55,7 @@ protected:
 		const std::vector<PipelineHandlerFactoryBase *> &factories =
 			PipelineHandlerFactoryBase::factories();
 		for (const PipelineHandlerFactoryBase *factory : factories) {
-			if (factory->name() == "vimc") {
+			if (factory->name() == "PipelineHandlerVimc") {
 				pipe_ = factory->create(nullptr);
 				break;
 			}

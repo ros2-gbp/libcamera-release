@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023, Ideas on Board Oy.
  *
- * Camera manager private data
+ * camera_manager.h - Camera manager private data
  */
 
 #pragma once
@@ -44,7 +44,6 @@ protected:
 private:
 	int init();
 	void createPipelineHandlers();
-	void pipelineFactoryMatch(const PipelineHandlerFactoryBase *factory);
 	void cleanup() LIBCAMERA_TSA_EXCLUDES(mutex_);
 
 	/*

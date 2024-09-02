@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * IPC mechanism based on Unix sockets
+ * ipc_unixsocket.cpp - IPC mechanism based on Unix sockets
  */
 
 #include "libcamera/internal/ipc_unixsocket.h"

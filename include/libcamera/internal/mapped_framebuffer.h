@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Frame buffer memory mapping support
+ * mapped_framebuffer.h - Frame buffer memory mapping support
  */
 
 #pragma once

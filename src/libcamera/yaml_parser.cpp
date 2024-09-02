@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Google Inc.
  *
- * libcamera YAML parsing helper
+ * yaml_parser.cpp - libcamera YAML parsing helper
  */
 
 #include "libcamera/internal/yaml_parser.h"
@@ -104,7 +104,7 @@ std::size_t YamlObject::size() const
  */
 
 /**
- * \fn template<typename T, typename U> YamlObject::get<T>(U &&defaultValue) const
+ * \fn template<typename T> YamlObject::get<T>(const T &defaultValue) const
  * \brief Parse the YamlObject as a \a T value
  * \param[in] defaultValue The default value when failing to parse
  *
@@ -118,15 +118,14 @@ std::size_t YamlObject::size() const
 #ifndef __DOXYGEN__
 
 template<>
-std::optional<bool>
-YamlObject::Getter<bool>::get(const YamlObject &obj) const
+std::optional<bool> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
-	if (obj.value_ == "true")
+	if (value_ == "true")
 		return true;
-	else if (obj.value_ == "false")
+	else if (value_ == "false")
 		return false;
 
 	return std::nullopt;
@@ -183,15 +182,14 @@ bool parseUnsignedInteger(const std::string &str, unsigned long max,
 } /* namespace */
 
 template<>
-std::optional<int8_t>
-YamlObject::Getter<int8_t>::get(const YamlObject &obj) const
+std::optional<int8_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	long value;
 
-	if (!parseSignedInteger(obj.value_, std::numeric_limits<int8_t>::min(),
+	if (!parseSignedInteger(value_, std::numeric_limits<int8_t>::min(),
 				std::numeric_limits<int8_t>::max(), &value))
 		return std::nullopt;
 
@@ -199,15 +197,14 @@ YamlObject::Getter<int8_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<uint8_t>
-YamlObject::Getter<uint8_t>::get(const YamlObject &obj) const
+std::optional<uint8_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	unsigned long value;
 
-	if (!parseUnsignedInteger(obj.value_, std::numeric_limits<uint8_t>::max(),
+	if (!parseUnsignedInteger(value_, std::numeric_limits<uint8_t>::max(),
 				  &value))
 		return std::nullopt;
 
@@ -215,15 +212,14 @@ YamlObject::Getter<uint8_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<int16_t>
-YamlObject::Getter<int16_t>::get(const YamlObject &obj) const
+std::optional<int16_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	long value;
 
-	if (!parseSignedInteger(obj.value_, std::numeric_limits<int16_t>::min(),
+	if (!parseSignedInteger(value_, std::numeric_limits<int16_t>::min(),
 				std::numeric_limits<int16_t>::max(), &value))
 		return std::nullopt;
 
@@ -231,15 +227,14 @@ YamlObject::Getter<int16_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<uint16_t>
-YamlObject::Getter<uint16_t>::get(const YamlObject &obj) const
+std::optional<uint16_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	unsigned long value;
 
-	if (!parseUnsignedInteger(obj.value_, std::numeric_limits<uint16_t>::max(),
+	if (!parseUnsignedInteger(value_, std::numeric_limits<uint16_t>::max(),
 				  &value))
 		return std::nullopt;
 
@@ -247,15 +242,14 @@ YamlObject::Getter<uint16_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<int32_t>
-YamlObject::Getter<int32_t>::get(const YamlObject &obj) const
+std::optional<int32_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	long value;
 
-	if (!parseSignedInteger(obj.value_, std::numeric_limits<int32_t>::min(),
+	if (!parseSignedInteger(value_, std::numeric_limits<int32_t>::min(),
 				std::numeric_limits<int32_t>::max(), &value))
 		return std::nullopt;
 
@@ -263,15 +257,14 @@ YamlObject::Getter<int32_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<uint32_t>
-YamlObject::Getter<uint32_t>::get(const YamlObject &obj) const
+std::optional<uint32_t> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
 	unsigned long value;
 
-	if (!parseUnsignedInteger(obj.value_, std::numeric_limits<uint32_t>::max(),
+	if (!parseUnsignedInteger(value_, std::numeric_limits<uint32_t>::max(),
 				  &value))
 		return std::nullopt;
 
@@ -279,26 +272,18 @@ YamlObject::Getter<uint32_t>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<float>
-YamlObject::Getter<float>::get(const YamlObject &obj) const
+std::optional<double> YamlObject::get() const
 {
-	return obj.get<double>();
-}
-
-template<>
-std::optional<double>
-YamlObject::Getter<double>::get(const YamlObject &obj) const
-{
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
-	if (obj.value_ == "")
+	if (value_ == "")
 		return std::nullopt;
 
 	char *end;
 
 	errno = 0;
-	double value = utils::strtod(obj.value_.c_str(), &end);
+	double value = utils::strtod(value_.c_str(), &end);
 
 	if ('\0' != *end || errno == ERANGE)
 		return std::nullopt;
@@ -307,30 +292,28 @@ YamlObject::Getter<double>::get(const YamlObject &obj) const
 }
 
 template<>
-std::optional<std::string>
-YamlObject::Getter<std::string>::get(const YamlObject &obj) const
+std::optional<std::string> YamlObject::get() const
 {
-	if (obj.type_ != Type::Value)
+	if (type_ != Type::Value)
 		return std::nullopt;
 
-	return obj.value_;
+	return value_;
 }
 
 template<>
-std::optional<Size>
-YamlObject::Getter<Size>::get(const YamlObject &obj) const
+std::optional<Size> YamlObject::get() const
 {
-	if (obj.type_ != Type::List)
+	if (type_ != Type::List)
 		return std::nullopt;
 
-	if (obj.list_.size() != 2)
+	if (list_.size() != 2)
 		return std::nullopt;
 
-	auto width = obj.list_[0].value->get<uint32_t>();
+	auto width = list_[0].value->get<uint32_t>();
 	if (!width)
 		return std::nullopt;
 
-	auto height = obj.list_[1].value->get<uint32_t>();
+	auto height = list_[1].value->get<uint32_t>();
 	if (!height)
 		return std::nullopt;
 
@@ -356,7 +339,6 @@ YamlObject::Getter<Size>::get(const YamlObject &obj) const
 template<typename T,
 	 std::enable_if_t<
 		 std::is_same_v<bool, T> ||
-		 std::is_same_v<float, T> ||
 		 std::is_same_v<double, T> ||
 		 std::is_same_v<int8_t, T> ||
 		 std::is_same_v<uint8_t, T> ||
@@ -385,7 +367,6 @@ std::optional<std::vector<T>> YamlObject::getList() const
 }
 
 template std::optional<std::vector<bool>> YamlObject::getList<bool>() const;
-template std::optional<std::vector<float>> YamlObject::getList<float>() const;
 template std::optional<std::vector<double>> YamlObject::getList<double>() const;
 template std::optional<std::vector<int8_t>> YamlObject::getList<int8_t>() const;
 template std::optional<std::vector<uint8_t>> YamlObject::getList<uint8_t>() const;
@@ -487,13 +468,10 @@ bool YamlObject::contains(const std::string &key) const
  */
 const YamlObject &YamlObject::operator[](const std::string &key) const
 {
-	if (type_ != Type::Dictionary)
+	if (type_ != Type::Dictionary || !contains(key))
 		return empty;
 
 	auto iter = dictionary_.find(key);
-	if (iter == dictionary_.end())
-		return empty;
-
 	return *iter->second;
 }
 
@@ -698,7 +676,7 @@ int YamlParserContext::parseDictionaryOrList(YamlObject::Type type,
 	 * Add a safety counter to make sure we don't loop indefinitely in case
 	 * the YAML file is malformed.
 	 */
-	for (unsigned int sentinel = 2000; sentinel; sentinel--) {
+	for (unsigned int sentinel = 1000; sentinel; sentinel--) {
 		auto evt = nextEvent();
 		if (!evt)
 			return -EINVAL;

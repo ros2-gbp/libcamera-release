@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * Miscellaneous utility functions
+ * utils.h - Miscellaneous utility functions
  */
 
 #pragma once
@@ -90,30 +90,6 @@ template<typename T,
 _hex hex(T value, unsigned int width = 0);
 
 #ifndef __DOXYGEN__
-template<>
-inline _hex hex<int8_t>(int8_t value, unsigned int width)
-{
-	return { static_cast<uint64_t>(value), width ? width : 2 };
-}
-
-template<>
-inline _hex hex<uint8_t>(uint8_t value, unsigned int width)
-{
-	return { static_cast<uint64_t>(value), width ? width : 2 };
-}
-
-template<>
-inline _hex hex<int16_t>(int16_t value, unsigned int width)
-{
-	return { static_cast<uint64_t>(value), width ? width : 4 };
-}
-
-template<>
-inline _hex hex<uint16_t>(uint16_t value, unsigned int width)
-{
-	return { static_cast<uint64_t>(value), width ? width : 4 };
-}
-
 template<>
 inline _hex hex<int32_t>(int32_t value, unsigned int width)
 {
@@ -392,12 +368,6 @@ decltype(auto) abs_diff(const T &a, const T &b)
 }
 
 double strtod(const char *__restrict nptr, char **__restrict endptr);
-
-template<class Enum>
-constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
-{
-	return static_cast<std::underlying_type_t<Enum>>(e);
-}
 
 } /* namespace utils */
 

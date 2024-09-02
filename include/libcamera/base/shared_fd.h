@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * File descriptor wrapper with shared ownership
+ * shared_fd.h - File descriptor wrapper with shared ownership
  */
 
 #pragma once

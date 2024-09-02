@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * V4L2 compatibility manager
+ * v4l2_compat_manager.h - V4L2 compatibility manager
  */
 
 #pragma once

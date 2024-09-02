@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Process test
+ * process_test.cpp - Process test
  */
 
 #include <iostream>

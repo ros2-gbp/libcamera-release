@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * C++20 std::span<> implementation for C++11
+ * span.h - C++20 std::span<> implementation for C++11
  */
 
 #pragma once

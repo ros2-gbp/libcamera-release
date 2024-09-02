@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Laurent Pinchart <laurent.pinchart@ideasonboard.com>
  *
- * Log message handling
+ * message_handler.cpp - qcam - Log message handling
  */
 
 #pragma once

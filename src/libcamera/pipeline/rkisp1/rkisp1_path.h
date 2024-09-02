@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Rockchip ISP1 path helper
+ * rkisp1path.h - Rockchip ISP1 path helper
  */
 
 #pragma once

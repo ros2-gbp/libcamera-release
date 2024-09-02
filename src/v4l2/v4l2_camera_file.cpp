@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * V4L2 compatibility camera file information
+ * v4l2_camera_file.h - V4L2 compatibility camera file information
  */
 
 #include "v4l2_camera_file.h"

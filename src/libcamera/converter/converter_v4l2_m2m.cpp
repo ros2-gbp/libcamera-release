@@ -3,7 +3,7 @@
  * Copyright (C) 2020, Laurent Pinchart
  * Copyright 2022 NXP
  *
- * V4L2 M2M Format converter
+ * converter_v4l2_m2m.cpp - V4L2 M2M Format converter
  */
 
 #include "libcamera/internal/converter/converter_v4l2_m2m.h"
@@ -32,24 +32,24 @@ namespace libcamera {
 LOG_DECLARE_CATEGORY(Converter)
 
 /* -----------------------------------------------------------------------------
- * V4L2M2MConverter::V4L2M2MStream
+ * V4L2M2MConverter::Stream
  */
 
-V4L2M2MConverter::V4L2M2MStream::V4L2M2MStream(V4L2M2MConverter *converter, const Stream *stream)
-	: converter_(converter), stream_(stream)
+V4L2M2MConverter::Stream::Stream(V4L2M2MConverter *converter, unsigned int index)
+	: converter_(converter), index_(index)
 {
 	m2m_ = std::make_unique<V4L2M2MDevice>(converter->deviceNode());
 
-	m2m_->output()->bufferReady.connect(this, &V4L2M2MStream::outputBufferReady);
-	m2m_->capture()->bufferReady.connect(this, &V4L2M2MStream::captureBufferReady);
+	m2m_->output()->bufferReady.connect(this, &Stream::outputBufferReady);
+	m2m_->capture()->bufferReady.connect(this, &Stream::captureBufferReady);
 
 	int ret = m2m_->open();
 	if (ret < 0)
 		m2m_.reset();
 }
 
-int V4L2M2MConverter::V4L2M2MStream::configure(const StreamConfiguration &inputCfg,
-					       const StreamConfiguration &outputCfg)
+int V4L2M2MConverter::Stream::configure(const StreamConfiguration &inputCfg,
+					const StreamConfiguration &outputCfg)
 {
 	V4L2PixelFormat videoFormat =
 		m2m_->output()->toV4L2PixelFormat(inputCfg.pixelFormat);
@@ -101,13 +101,13 @@ int V4L2M2MConverter::V4L2M2MStream::configure(const StreamConfiguration &inputC
 	return 0;
 }
 
-int V4L2M2MConverter::V4L2M2MStream::exportBuffers(unsigned int count,
-						   std::vector<std::unique_ptr<FrameBuffer>> *buffers)
+int V4L2M2MConverter::Stream::exportBuffers(unsigned int count,
+					    std::vector<std::unique_ptr<FrameBuffer>> *buffers)
 {
 	return m2m_->capture()->exportBuffers(count, buffers);
 }
 
-int V4L2M2MConverter::V4L2M2MStream::start()
+int V4L2M2MConverter::Stream::start()
 {
 	int ret = m2m_->output()->importBuffers(inputBufferCount_);
 	if (ret < 0)
@@ -134,7 +134,7 @@ int V4L2M2MConverter::V4L2M2MStream::start()
 	return 0;
 }
 
-void V4L2M2MConverter::V4L2M2MStream::stop()
+void V4L2M2MConverter::Stream::stop()
 {
 	m2m_->capture()->streamOff();
 	m2m_->output()->streamOff();
@@ -142,7 +142,7 @@ void V4L2M2MConverter::V4L2M2MStream::stop()
 	m2m_->output()->releaseBuffers();
 }
 
-int V4L2M2MConverter::V4L2M2MStream::queueBuffers(FrameBuffer *input, FrameBuffer *output)
+int V4L2M2MConverter::Stream::queueBuffers(FrameBuffer *input, FrameBuffer *output)
 {
 	int ret = m2m_->output()->queueBuffer(input);
 	if (ret < 0)
@@ -155,12 +155,12 @@ int V4L2M2MConverter::V4L2M2MStream::queueBuffers(FrameBuffer *input, FrameBuffe
 	return 0;
 }
 
-std::string V4L2M2MConverter::V4L2M2MStream::logPrefix() const
+std::string V4L2M2MConverter::Stream::logPrefix() const
 {
-	return stream_->configuration().toString();
+	return "stream" + std::to_string(index_);
 }
 
-void V4L2M2MConverter::V4L2M2MStream::outputBufferReady(FrameBuffer *buffer)
+void V4L2M2MConverter::Stream::outputBufferReady(FrameBuffer *buffer)
 {
 	auto it = converter_->queue_.find(buffer);
 	if (it == converter_->queue_.end())
@@ -172,7 +172,7 @@ void V4L2M2MConverter::V4L2M2MStream::outputBufferReady(FrameBuffer *buffer)
 	}
 }
 
-void V4L2M2MConverter::V4L2M2MStream::captureBufferReady(FrameBuffer *buffer)
+void V4L2M2MConverter::Stream::captureBufferReady(FrameBuffer *buffer)
 {
 	converter_->outputBufferReady.emit(buffer);
 }
@@ -333,24 +333,21 @@ int V4L2M2MConverter::configure(const StreamConfiguration &inputCfg,
 	int ret = 0;
 
 	streams_.clear();
+	streams_.reserve(outputCfgs.size());
 
 	for (unsigned int i = 0; i < outputCfgs.size(); ++i) {
-		const StreamConfiguration &cfg = outputCfgs[i];
-		std::unique_ptr<V4L2M2MStream> stream =
-			std::make_unique<V4L2M2MStream>(this, cfg.stream());
+		Stream &stream = streams_.emplace_back(this, i);
 
-		if (!stream->isValid()) {
+		if (!stream.isValid()) {
 			LOG(Converter, Error)
 				<< "Failed to create stream " << i;
 			ret = -EINVAL;
 			break;
 		}
 
-		ret = stream->configure(inputCfg, cfg);
+		ret = stream.configure(inputCfg, outputCfgs[i]);
 		if (ret < 0)
 			break;
-
-		streams_.emplace(cfg.stream(), std::move(stream));
 	}
 
 	if (ret < 0) {
@@ -364,14 +361,13 @@ int V4L2M2MConverter::configure(const StreamConfiguration &inputCfg,
 /**
  * \copydoc libcamera::Converter::exportBuffers
  */
-int V4L2M2MConverter::exportBuffers(const Stream *stream, unsigned int count,
+int V4L2M2MConverter::exportBuffers(unsigned int output, unsigned int count,
 				    std::vector<std::unique_ptr<FrameBuffer>> *buffers)
 {
-	auto iter = streams_.find(stream);
-	if (iter == streams_.end())
+	if (output >= streams_.size())
 		return -EINVAL;
 
-	return iter->second->exportBuffers(count, buffers);
+	return streams_[output].exportBuffers(count, buffers);
 }
 
 /**
@@ -381,8 +377,8 @@ int V4L2M2MConverter::start()
 {
 	int ret;
 
-	for (auto &iter : streams_) {
-		ret = iter.second->start();
+	for (Stream &stream : streams_) {
+		ret = stream.start();
 		if (ret < 0) {
 			stop();
 			return ret;
@@ -397,40 +393,41 @@ int V4L2M2MConverter::start()
  */
 void V4L2M2MConverter::stop()
 {
-	for (auto &iter : streams_)
-		iter.second->stop();
+	for (Stream &stream : utils::reverse(streams_))
+		stream.stop();
 }
 
 /**
  * \copydoc libcamera::Converter::queueBuffers
  */
 int V4L2M2MConverter::queueBuffers(FrameBuffer *input,
-				   const std::map<const Stream *, FrameBuffer *> &outputs)
+				   const std::map<unsigned int, FrameBuffer *> &outputs)
 {
-	std::set<FrameBuffer *> outputBufs;
+	unsigned int mask = 0;
 	int ret;
 
 	/*
 	 * Validate the outputs as a sanity check: at least one output is
 	 * required, all outputs must reference a valid stream and no two
-	 * streams can reference same output framebuffers.
+	 * outputs can reference the same stream.
 	 */
 	if (outputs.empty())
 		return -EINVAL;
 
-	for (auto [stream, buffer] : outputs) {
+	for (auto [index, buffer] : outputs) {
 		if (!buffer)
 			return -EINVAL;
+		if (index >= streams_.size())
+			return -EINVAL;
+		if (mask & (1 << index))
+			return -EINVAL;
 
-		outputBufs.insert(buffer);
+		mask |= 1 << index;
 	}
 
-	if (outputBufs.size() != streams_.size())
-		return -EINVAL;
-
 	/* Queue the input and output buffers to all the streams. */
-	for (auto [stream, buffer] : outputs) {
-		ret = streams_.at(stream)->queueBuffers(input, buffer);
+	for (auto [index, buffer] : outputs) {
+		ret = streams_[index].queueBuffers(input, buffer);
 		if (ret < 0)
 			return ret;
 	}
@@ -448,7 +445,6 @@ int V4L2M2MConverter::queueBuffers(FrameBuffer *input,
 }
 
 static std::initializer_list<std::string> compatibles = {
-	"mtk-mdp",
 	"pxp",
 };
 

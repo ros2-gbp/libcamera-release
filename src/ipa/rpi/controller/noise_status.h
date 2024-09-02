@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * Noise control algorithm status
+ * noise_status.h - Noise control algorithm status
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023, Ideas on Board Oy
  *
- * Verify signature on an IPA module
+ * ipa_verify.cpp - Verify signature on an IPA module
  */
 
 #include <iostream>

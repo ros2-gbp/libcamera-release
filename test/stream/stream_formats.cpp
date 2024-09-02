@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * StreamFormats test
+ * stream_formats.cpp - StreamFormats test
  */
 
 #include <iostream>

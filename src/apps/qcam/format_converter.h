@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Convert buffer to RGB
+ * format_convert.h - qcam - Convert buffer to RGB
  */
 
 #pragma once

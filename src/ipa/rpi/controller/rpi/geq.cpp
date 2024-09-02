@@ -2,13 +2,14 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * GEQ (green equalisation) control algorithm
+ * geq.cpp - GEQ (green equalisation) control algorithm
  */
 
 #include <libcamera/base/log.h>
 
 #include "../device_status.h"
 #include "../lux_status.h"
+#include "../pwl.h"
 
 #include "geq.h"
 
@@ -44,9 +45,9 @@ int Geq::read(const libcamera::YamlObject &params)
 	}
 
 	if (params.contains("strength")) {
-		config_.strength = params["strength"].get<ipa::Pwl>(ipa::Pwl{});
-		if (config_.strength.empty())
-			return -EINVAL;
+		int ret = config_.strength.read(params["strength"]);
+		if (ret)
+			return ret;
 	}
 
 	return 0;
@@ -66,7 +67,7 @@ void Geq::prepare(Metadata *imageMetadata)
 	GeqStatus geqStatus = {};
 	double strength = config_.strength.empty()
 			? 1.0
-			: config_.strength.eval(config_.strength.domain().clamp(luxStatus.lux));
+			: config_.strength.eval(config_.strength.domain().clip(luxStatus.lux));
 	strength *= deviceStatus.analogueGain;
 	double offset = config_.offset * strength;
 	double slope = config_.slope * strength;

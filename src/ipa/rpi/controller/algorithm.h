@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * ISP control algorithm interface
+ * algorithm.h - ISP control algorithm interface
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019, Raspberry Pi Ltd
 #
-# camera tuning tool for GEQ (green equalisation)
+# ctt_geq.py - camera tuning tool for GEQ (green equalisation)
 
 from ctt_tools import *
 import matplotlib.pyplot as plt

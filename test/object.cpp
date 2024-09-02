@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Object tests
+ * object.cpp - Object tests
  */
 
 #include <iostream>

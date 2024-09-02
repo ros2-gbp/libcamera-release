@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * IPU3 Image Processing Algorithms
+ * ipu3.cpp - IPU3 Image Processing Algorithms
  */
 
 #include <algorithm>
@@ -189,7 +189,7 @@ private:
 };
 
 IPAIPU3::IPAIPU3()
-	: context_({ {}, {}, { kMaxFrameContexts }, {} })
+	: context_({ {}, {}, { kMaxFrameContexts } })
 {
 }
 
@@ -287,7 +287,6 @@ void IPAIPU3::updateControls(const IPACameraSensorInfo &sensorInfo,
 							       frameDurations[1],
 							       frameDurations[2]);
 
-	controls.merge(context_.ctrlMap);
 	*ipaControls = ControlInfoMap(std::move(controls), controls::controls);
 }
 
@@ -673,7 +672,7 @@ extern "C" {
 const struct IPAModuleInfo ipaModuleInfo = {
 	IPA_MODULE_API_VERSION,
 	1,
-	"ipu3",
+	"PipelineHandlerIPU3",
 	"ipu3",
 };
 

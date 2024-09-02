@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Intel IPU3 CIO2
+ * cio2.cpp - Intel IPU3 CIO2
  */
 
 #include "cio2.h"
@@ -202,7 +202,7 @@ int CIO2Device::configure(const Size &size, const Transform &transform,
 	if (ret)
 		return ret;
 
-	const auto &itInfo = mbusCodesToPixelFormat.find(sensorFormat.code);
+	const auto &itInfo = mbusCodesToPixelFormat.find(sensorFormat.mbus_code);
 	if (itInfo == mbusCodesToPixelFormat.end())
 		return -EINVAL;
 
@@ -230,13 +230,13 @@ StreamConfiguration CIO2Device::generateConfiguration(Size size) const
 	/* Query the sensor static information for closest match. */
 	std::vector<unsigned int> mbusCodes = utils::map_keys(mbusCodesToPixelFormat);
 	V4L2SubdeviceFormat sensorFormat = getSensorFormat(mbusCodes, size);
-	if (!sensorFormat.code) {
+	if (!sensorFormat.mbus_code) {
 		LOG(IPU3, Error) << "Sensor does not support mbus code";
 		return {};
 	}
 
 	cfg.size = sensorFormat.size;
-	cfg.pixelFormat = mbusCodesToPixelFormat.at(sensorFormat.code);
+	cfg.pixelFormat = mbusCodesToPixelFormat.at(sensorFormat.mbus_code);
 	cfg.bufferCount = kBufferCount;
 
 	return cfg;
@@ -326,7 +326,7 @@ V4L2SubdeviceFormat CIO2Device::getSensorFormat(const std::vector<unsigned int> 
 	}
 
 	V4L2SubdeviceFormat format{};
-	format.code = bestCode;
+	format.mbus_code = bestCode;
 	format.size = bestSize;
 
 	return format;

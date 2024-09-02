@@ -63,8 +63,6 @@ protected:
 		request->reuse();
 		request->addBuffer(stream, buffer);
 		camera_->queueRequest(request);
-
-		dispatcher_->interrupt();
 	}
 
 	int init() override
@@ -77,8 +75,6 @@ protected:
 			std::cout << "Failed to generate default configuration" << std::endl;
 			return TestFail;
 		}
-
-		dispatcher_ = Thread::current()->eventDispatcher();
 
 		return TestPass;
 	}
@@ -137,20 +133,17 @@ protected:
 			}
 		}
 
-		const unsigned int nFrames = cfg.bufferCount * 2;
+		EventDispatcher *dispatcher = Thread::current()->eventDispatcher();
 
 		Timer timer;
-		timer.start(500ms * nFrames);
-		while (timer.isRunning()) {
-			dispatcher_->processEvents();
-			if (completeRequestsCount_ > nFrames)
-				break;
-		}
+		timer.start(1000ms);
+		while (timer.isRunning())
+			dispatcher->processEvents();
 
-		if (completeRequestsCount_ < nFrames) {
+		if (completeRequestsCount_ < cfg.bufferCount * 2) {
 			std::cout << "Failed to capture enough frames (got "
 				  << completeRequestsCount_ << " expected at least "
-				  << nFrames << ")" << std::endl;
+				  << cfg.bufferCount * 2 << ")" << std::endl;
 			return TestFail;
 		}
 
@@ -168,8 +161,6 @@ protected:
 	}
 
 private:
-	EventDispatcher *dispatcher_;
-
 	std::vector<std::unique_ptr<Request>> requests_;
 
 	unsigned int completeBuffersCount_;

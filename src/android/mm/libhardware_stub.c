@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023, Ideas on Board
  *
- * Android libhardware stub for test compilation
+ * libhardware_stub.c - Android libhardware stub for test compilation
  */
 
 #include <errno.h>

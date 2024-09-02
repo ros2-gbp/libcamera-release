@@ -1,20 +1,11 @@
 .. SPDX-License-Identifier: CC-BY-SA-4.0
 
-libcamera tuning tools
-======================
+.. TODO: Write an overview of libtuning
 
-.. Note:: The tuning tools are still very much work in progress. If in doubt,
-    please ask on the mailing list.
+Dependencies
+------------
 
-.. todo::
-    Write documentation
-
-Installation of dependencies
-----------------------------
-
-::
-    # Using a venv
-    python3 -m venv venv
-    . ./venv/bin/activate
-    pip3 install -r requirements.txt
-
+- cv2
+- numpy
+- pyexiv2
+- rawpy

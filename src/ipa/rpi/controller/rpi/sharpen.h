@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * sharpening control algorithm
+ * sharpen.h - sharpening control algorithm
  */
 #pragma once
 

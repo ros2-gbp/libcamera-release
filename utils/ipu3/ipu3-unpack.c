@@ -8,7 +8,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-static void usage(char *argv0)
+static void usage(const char *argv0)
 {
 	printf("Usage: %s input-file output-file\n", basename(argv0));
 	printf("Unpack the IPU3 raw Bayer format to 16-bit Bayer\n");
@@ -79,7 +78,7 @@ int main(int argc, char *argv[])
 		}
 
 		ret = write(out_fd, out_data, 50);
-		if (ret == -1) {
+		if (ret < -1) {
 			fprintf(stderr, "Failed to write output data: %s\n",
 				strerror(errno));
 			goto done;

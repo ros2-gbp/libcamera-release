@@ -2,12 +2,11 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Method bind and invocation
+ * bound_method.cpp - Method bind and invocation
  */
 
 #include <libcamera/base/bound_method.h>
 #include <libcamera/base/message.h>
-#include <libcamera/base/object.h>
 #include <libcamera/base/semaphore.h>
 #include <libcamera/base/thread.h>
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * V4L2 compatibility camera
+ * v4l2_camera.h - V4L2 compatibility camera
  */
 
 #pragma once

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas on Board Oy
  *
- * SDL Sink
+ * sdl_sink.h - SDL Sink
  */
 
 #include "sdl_sink.h"

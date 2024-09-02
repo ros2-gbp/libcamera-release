@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * File I/O operations
+ * file.cpp - File I/O operations
  */
 
 #include <libcamera/base/file.h>

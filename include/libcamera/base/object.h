@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Base object
+ * object.h - Base object
  */
 
 #pragma once
@@ -48,8 +48,6 @@ public:
 
 protected:
 	virtual void message(Message *msg);
-
-	bool assertThreadBound(const char *message);
 
 private:
 	friend class SignalBase;

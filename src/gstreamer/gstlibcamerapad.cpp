@@ -3,7 +3,7 @@
  * Copyright (C) 2019, Collabora Ltd.
  *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *
- * GStreamer Capture Pad
+ * gstlibcamerapad.cpp - GStreamer Capture Pad
  */
 
 #include "gstlibcamerapad.h"

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * camera helper for imx219 sensor
+ * cam_helper_imx219.cpp - camera helper for imx219 sensor
  */
 
 #include <assert.h>

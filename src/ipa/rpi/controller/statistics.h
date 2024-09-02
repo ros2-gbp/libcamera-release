@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Raspberry Pi Ltd
  *
- * Raspberry Pi generic statistics structure
+ * statistics.h - Raspberry Pi generic statistics structure
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Logging in isolated child process test
+ * log_process.cpp - Logging in isolated child process test
  */
 
 #include <fcntl.h>
@@ -81,13 +81,12 @@ protected:
 			return TestFail;
 		}
 
-		timeout.start(2s);
+		timeout.start(200ms);
 		while (timeout.isRunning())
 			dispatcher->processEvents();
 
 		if (exitStatus_ != Process::NormalExit) {
-			cerr << "process did not exit normally: " << exitStatus_
-			     << endl;
+			cerr << "process did not exit normally" << endl;
 			return TestFail;
 		}
 
@@ -116,11 +115,8 @@ protected:
 		close(fd);
 
 		string str(buf);
-		if (str.find(message) == string::npos) {
-			cerr << "Received message is not correct (received "
-			     << str.length() << " bytes)" << endl;
+		if (str.find(message) == string::npos)
 			return TestFail;
-		}
 
 		return TestPass;
 	}
@@ -140,7 +136,7 @@ private:
 	ProcessManager processManager_;
 
 	Process proc_;
-	Process::ExitStatus exitStatus_ = Process::NotExited;
+	Process::ExitStatus exitStatus_;
 	string logPath_;
 	int exitCode_;
 	int num_;

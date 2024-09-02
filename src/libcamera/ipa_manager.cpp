@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Image Processing Algorithm module manager
+ * ipa_manager.cpp - Image Processing Algorithm module manager
  */
 
 #include "libcamera/internal/ipa_manager.h"

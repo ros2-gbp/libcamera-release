@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * A camera lens
+ * camera_lens.cpp - A camera lens
  */
 
 #include "libcamera/internal/camera_lens.h"

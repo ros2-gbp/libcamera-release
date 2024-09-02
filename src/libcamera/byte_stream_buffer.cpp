@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Byte stream buffer
+ * byte_stream_buffer.cpp - Byte stream buffer
  */
 
 #include "libcamera/internal/byte_stream_buffer.h"

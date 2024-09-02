@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * cam - The libcamera swiss army knife
+ * main.cpp - cam - The libcamera swiss army knife
  */
 
 #include <atomic>
@@ -133,11 +133,6 @@ int CamApp::parseOptions(int argc, char *argv[])
 			 "Capture until interrupted by user or until <count> frames captured",
 			 "capture", ArgumentOptional, "count", false,
 			 OptCamera);
-
-	parser.addOption(OptOrientation, OptionString,
-			 "Desired image orientation (rot0, rot180, mirror, flip)",
-			 "orientation", ArgumentRequired, "orientation", false,
-			 OptCamera);
 #ifdef HAVE_KMS
 	parser.addOption(OptDisplay, OptionString,
 			 "Display viewfinder through DRM/KMS on specified connector",
@@ -154,8 +149,6 @@ int CamApp::parseOptions(int argc, char *argv[])
 			 "If the file name ends with '.dng', then the frame will be written to\n"
 			 "the output file(s) in DNG format.\n"
 #endif
-			 "If the file name ends with '.ppm', then the frame will be written to\n"
-			 "the output file(s) in PPM format.\n"
 			 "The default file name is 'frame-#.bin'.",
 			 "file", ArgumentOptional, "filename", false,
 			 OptCamera);
@@ -344,15 +337,11 @@ std::string CamApp::cameraName(const Camera *camera)
 	return name;
 }
 
-namespace {
-
 void signalHandler([[maybe_unused]] int signal)
 {
 	std::cout << "Exiting" << std::endl;
 	CamApp::instance()->quit();
 }
-
-} /* namespace */
 
 int main(int argc, char **argv)
 {

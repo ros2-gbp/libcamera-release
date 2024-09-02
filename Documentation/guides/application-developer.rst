@@ -116,21 +116,19 @@ available.
 
 .. code:: cpp
 
-   auto cameras = cm->cameras();
-   if (cameras.empty()) {
+   if (cm->cameras().empty()) {
        std::cout << "No cameras were identified on the system."
                  << std::endl;
        cm->stop();
        return EXIT_FAILURE;
    }
 
-   std::string cameraId = cameras[0]->id();
+   std::string cameraId = cm->cameras()[0]->id();
+   camera = cm->get(cameraId);
 
-   auto camera = cm->get(cameraId);
    /*
-    * Note that `camera` may not compare equal to `cameras[0]`.
-    * In fact, it might simply be a `nullptr`, as the particular
-    * device might have disappeared (and reappeared) in the meantime.
+    * Note that is equivalent to:
+    * camera = cm->cameras()[0];
     */
 
 Once a camera has been selected an application needs to acquire an exclusive
@@ -350,7 +348,7 @@ The libcamera library uses the concept of `signals and slots` (similar to `Qt
 Signals and Slots`_) to connect events with callbacks to handle them.
 
 .. _signals and slots: https://libcamera.org/api-html/classlibcamera_1_1Signal.html#details
-.. _Qt Signals and Slots: https://doc.qt.io/qt-6/signalsandslots.html
+.. _Qt Signals and Slots: https://doc.qt.io/qt-5/signalsandslots.html
 
 The ``Camera`` device emits two signals that applications can connect to in
 order to execute callbacks on frame completion events.

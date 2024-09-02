@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Public key signature verification
+ * pub_key.h - Public key signature verification
  */
 
 #pragma once

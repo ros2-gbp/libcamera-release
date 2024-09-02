@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Signal & slot implementation
+ * signal.h - Signal & slot implementation
  */
 
 #pragma once
@@ -13,10 +13,9 @@
 #include <vector>
 
 #include <libcamera/base/bound_method.h>
+#include <libcamera/base/object.h>
 
 namespace libcamera {
-
-class Object;
 
 class SignalBase
 {

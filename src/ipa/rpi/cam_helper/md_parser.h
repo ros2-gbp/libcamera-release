@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * image sensor metadata parser interface
+ * md_parser.h - image sensor metadata parser interface
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Test loading of the VIMC IPA module and verify its info
+ * ipa_module_test.cpp - Test loading of the VIMC IPA module and verify its info
  */
 
 #include <iostream>
@@ -57,7 +57,7 @@ protected:
 		const struct IPAModuleInfo testInfo = {
 			IPA_MODULE_API_VERSION,
 			0,
-			"vimc",
+			"PipelineHandlerVimc",
 			"vimc",
 		};
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Raspberry Pi Ltd
  *
- * AF control algorithm status
+ * af_status.h - AF control algorithm status
  */
 #pragma once
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Raspberry Pi Ltd
  *
- * color space definitions
+ * color_space.h - color space definitions
  */
 
 #pragma once

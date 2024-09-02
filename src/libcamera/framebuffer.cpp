@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Frame buffer handling
+ * framebuffer.cpp - Frame buffer handling
  */
 
 #include <libcamera/framebuffer.h>

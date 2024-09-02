@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas on Board Oy
  *
- * Multi-planar image with access to pixel data
+ * image.h - Multi-planar image with access to pixel data
  */
 
 #pragma once

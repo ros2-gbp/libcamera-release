@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Raspberry Pi Ltd
  *
- * Camera helper for IMX296 sensor
+ * cam_helper_imx296.cpp - Camera helper for IMX296 sensor
  */
 
 #include <algorithm>

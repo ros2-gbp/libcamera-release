@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * cam - Event loop
+ * event_loop.h - cam - Event loop
  */
 
 #pragma once

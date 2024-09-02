@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Compiler support
+ * compiler.h - Compiler support
  */
 
 #pragma once

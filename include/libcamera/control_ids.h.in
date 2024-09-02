@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Control ID list
+ * control_ids.h - Control ID list
  *
  * This file is auto-generated. Do not edit.
  */
@@ -10,9 +10,7 @@
 #pragma once
 
 #include <array>
-#include <map>
 #include <stdint.h>
-#include <string>
 
 #include <libcamera/controls.h>
 
@@ -28,7 +26,11 @@ ${controls}
 
 extern const ControlIdMap controls;
 
-${vendor_controls}
+namespace draft {
+
+${draft_controls}
+
+} /* namespace draft */
 
 } /* namespace controls */
 

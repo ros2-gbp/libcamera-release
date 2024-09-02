@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * V4L2 Video Device
+ * v4l2_videodevice.cpp - V4L2 Video Device
  */
 
 #include "libcamera/internal/v4l2_videodevice.h"
@@ -803,19 +803,12 @@ std::string V4L2VideoDevice::logPrefix() const
  */
 int V4L2VideoDevice::getFormat(V4L2DeviceFormat *format)
 {
-	switch (bufferType_) {
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-		return getFormatSingleplane(format);
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		return getFormatMultiplane(format);
-	case V4L2_BUF_TYPE_META_CAPTURE:
-	case V4L2_BUF_TYPE_META_OUTPUT:
+	if (caps_.isMeta())
 		return getFormatMeta(format);
-	default:
-		return -EINVAL;
-	}
+	else if (caps_.isMultiplanar())
+		return getFormatMultiplane(format);
+	else
+		return getFormatSingleplane(format);
 }
 
 /**
@@ -830,19 +823,12 @@ int V4L2VideoDevice::getFormat(V4L2DeviceFormat *format)
  */
 int V4L2VideoDevice::tryFormat(V4L2DeviceFormat *format)
 {
-	switch (bufferType_) {
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-		return trySetFormatSingleplane(format, false);
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		return trySetFormatMultiplane(format, false);
-	case V4L2_BUF_TYPE_META_CAPTURE:
-	case V4L2_BUF_TYPE_META_OUTPUT:
+	if (caps_.isMeta())
 		return trySetFormatMeta(format, false);
-	default:
-		return -EINVAL;
-	}
+	else if (caps_.isMultiplanar())
+		return trySetFormatMultiplane(format, false);
+	else
+		return trySetFormatSingleplane(format, false);
 }
 
 /**
@@ -856,25 +842,13 @@ int V4L2VideoDevice::tryFormat(V4L2DeviceFormat *format)
  */
 int V4L2VideoDevice::setFormat(V4L2DeviceFormat *format)
 {
-	int ret;
-
-	switch (bufferType_) {
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-		ret = trySetFormatSingleplane(format, true);
-		break;
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		ret = trySetFormatMultiplane(format, true);
-		break;
-	case V4L2_BUF_TYPE_META_CAPTURE:
-	case V4L2_BUF_TYPE_META_OUTPUT:
+	int ret = 0;
+	if (caps_.isMeta())
 		ret = trySetFormatMeta(format, true);
-		break;
-	default:
-		ret = -EINVAL;
-		break;
-	}
+	else if (caps_.isMultiplanar())
+		ret = trySetFormatMultiplane(format, true);
+	else
+		ret = trySetFormatSingleplane(format, true);
 
 	/* Cache the set format on success. */
 	if (ret)

@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022, Paul Elder <paul.elder@ideasonboard.com>
 #
-# Gradients that can be used to distribute or map numbers
+# gradient.py - Gradients that can be used to distribute or map numbers
 
 import libtuning as lt
 

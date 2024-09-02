@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Camera HAL stream
+ * camera_stream.h - Camera HAL stream
  */
 
 #pragma once

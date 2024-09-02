@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Intel IPU3 ImgU
+ * imgu.h - Intel IPU3 ImgU
  */
 
 #pragma once

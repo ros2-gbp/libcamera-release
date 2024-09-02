@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Generic timer
+ * timer.cpp - Generic timer
  */
 
 #include <libcamera/base/timer.h>
@@ -85,8 +85,10 @@ void Timer::start(std::chrono::milliseconds duration)
  */
 void Timer::start(std::chrono::steady_clock::time_point deadline)
 {
-	if (!assertThreadBound("Timer can't be started from another thread"))
+	if (Thread::current() != thread()) {
+		LOG(Timer, Error) << "Timer " << this << " << can't be started from another thread";
 		return;
+	}
 
 	deadline_ = deadline;
 
@@ -112,11 +114,13 @@ void Timer::start(std::chrono::steady_clock::time_point deadline)
  */
 void Timer::stop()
 {
-	if (!assertThreadBound("Timer can't be stopped from another thread"))
-		return;
-
 	if (!isRunning())
 		return;
+
+	if (Thread::current() != thread()) {
+		LOG(Timer, Error) << "Timer " << this << " can't be stopped from another thread";
+		return;
+	}
 
 	unregisterTimer();
 }

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Pipeline handler for uvcvideo devices
+ * uvcvideo.cpp - Pipeline handler for uvcvideo devices
  */
 
 #include <algorithm>
@@ -111,8 +111,8 @@ CameraConfiguration::Status UVCCameraConfiguration::validate()
 	if (config_.empty())
 		return Invalid;
 
-	if (orientation != Orientation::Rotate0) {
-		orientation = Orientation::Rotate0;
+	if (transform != Transform::Identity) {
+		transform = Transform::Identity;
 		status = Adjusted;
 	}
 
@@ -709,6 +709,6 @@ void UVCCameraData::bufferReady(FrameBuffer *buffer)
 	pipe()->completeRequest(request);
 }
 
-REGISTER_PIPELINE_HANDLER(PipelineHandlerUVC, "uvcvideo")
+REGISTER_PIPELINE_HANDLER(PipelineHandlerUVC)
 
 } /* namespace libcamera */

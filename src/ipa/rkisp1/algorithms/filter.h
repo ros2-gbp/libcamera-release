@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021-2022, Ideas On Board
  *
- * RkISP1 Filter control
+ * filter.h - RkISP1 Filter control
  */
 
 #pragma once

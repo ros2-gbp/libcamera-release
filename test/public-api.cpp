@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Public API validation
+ * public-api.cpp - Public API validation
  */
 
 #include <libcamera/libcamera.h>

@@ -2,20 +2,16 @@
 /*
  * Copyright (C) 2021-2022, Ideas On Board
  *
- * RkISP1 AGC/AEC mean-based control algorithm
+ * agc.h - RkISP1 AGC/AEC mean-based control algorithm
  */
 
 #pragma once
 
 #include <linux/rkisp1-config.h>
 
-#include <libcamera/base/span.h>
 #include <libcamera/base/utils.h>
 
 #include <libcamera/geometry.h>
-
-#include "libipa/agc_mean_luminance.h"
-#include "libipa/histogram.h"
 
 #include "algorithm.h"
 
@@ -23,13 +19,12 @@ namespace libcamera {
 
 namespace ipa::rkisp1::algorithms {
 
-class Agc : public Algorithm, public AgcMeanLuminance
+class Agc : public Algorithm
 {
 public:
 	Agc();
 	~Agc() = default;
 
-	int init(IPAContext &context, const YamlObject &tuningData) override;
 	int configure(IPAContext &context, const IPACameraSensorInfo &configInfo) override;
 	void queueRequest(IPAContext &context,
 			  const uint32_t frame,
@@ -44,17 +39,20 @@ public:
 		     ControlList &metadata) override;
 
 private:
-	int parseMeteringModes(IPAContext &context, const YamlObject &tuningData);
-	uint8_t computeHistogramPredivider(const Size &size,
-					   enum rkisp1_cif_isp_histogram_mode mode);
-
+	void computeExposure(IPAContext &Context, IPAFrameContext &frameContext,
+			     double yGain, double iqMeanGain);
+	utils::Duration filterExposure(utils::Duration exposureValue);
+	double estimateLuminance(const rkisp1_cif_isp_ae_stat *ae, double gain);
+	double measureBrightness(const rkisp1_cif_isp_hist_stat *hist) const;
 	void fillMetadata(IPAContext &context, IPAFrameContext &frameContext,
 			  ControlList &metadata);
-	double estimateLuminance(double gain) const override;
 
-	Span<const uint8_t> expMeans_;
+	uint64_t frameCount_;
 
-	std::map<int32_t, std::vector<uint8_t>> meteringModes_;
+	uint32_t numCells_;
+	uint32_t numHistBins_;
+
+	utils::Duration filteredExposure_;
 };
 
 } /* namespace ipa::rkisp1::algorithms */

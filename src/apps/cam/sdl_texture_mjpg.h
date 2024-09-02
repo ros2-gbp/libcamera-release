@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas on Board Oy
  *
- * SDL Texture MJPG
+ * sdl_texture_mjpg.h - SDL Texture MJPG
  */
 
 #pragma once

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * General-purpose counting semaphore
+ * semaphore.cpp - General-purpose counting semaphore
  */
 
 #include <libcamera/base/semaphore.h>

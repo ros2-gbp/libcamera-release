@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Allocate FrameBuffer using gralloc API
+ * generic_camera_buffer.cpp - Allocate FrameBuffer using gralloc API
  */
 
 #include <dlfcn.h>

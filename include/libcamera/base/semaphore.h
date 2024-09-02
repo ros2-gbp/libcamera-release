@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * General-purpose counting semaphore
+ * semaphore.h - General-purpose counting semaphore
  */
 
 #pragma once

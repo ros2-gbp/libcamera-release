@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas On Board
  *
- * IPA control algorithm interface
+ * algorithm.cpp - IPA control algorithm interface
  */
 
 #include "algorithm.h"

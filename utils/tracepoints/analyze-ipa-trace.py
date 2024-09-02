@@ -4,7 +4,7 @@
 #
 # Author: Paul Elder <paul.elder@ideasonboard.com>
 #
-# Example of how to extract information from libcamera lttng traces
+# analyze-ipa-trace.py - Example of how to extract information from libcamera lttng traces
 
 import argparse
 import bt2

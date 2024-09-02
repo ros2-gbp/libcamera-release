@@ -2,11 +2,9 @@
 /*
  * Copyright (C) 2019, Raspberry Pi Ltd
  *
- * GEQ (green equalisation) control algorithm
+ * geq.h - GEQ (green equalisation) control algorithm
  */
 #pragma once
-
-#include <libipa/pwl.h>
 
 #include "../algorithm.h"
 #include "../geq_status.h"
@@ -18,7 +16,7 @@ namespace RPiController {
 struct GeqConfig {
 	uint16_t offset;
 	double slope;
-	libcamera::ipa::Pwl strength; /* lux to strength factor */
+	Pwl strength; /* lux to strength factor */
 };
 
 class Geq : public Algorithm

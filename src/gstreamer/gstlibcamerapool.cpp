@@ -3,12 +3,11 @@
  * Copyright (C) 2020, Collabora Ltd.
  *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *
- * GStreamer Buffer Pool
+ * gstlibcamerapool.cpp - GStreamer Buffer Pool
  */
 
 #include "gstlibcamerapool.h"
 
-#include <deque>
 #include <libcamera/stream.h>
 
 #include "gstlibcamera-utils.h"
@@ -25,41 +24,24 @@ static guint signals[N_SIGNALS];
 struct _GstLibcameraPool {
 	GstBufferPool parent;
 
-	std::deque<GstBuffer *> *queue;
+	GstAtomicQueue *queue;
 	GstLibcameraAllocator *allocator;
 	Stream *stream;
 };
 
 G_DEFINE_TYPE(GstLibcameraPool, gst_libcamera_pool, GST_TYPE_BUFFER_POOL)
 
-static GstBuffer *
-gst_libcamera_pool_pop_buffer(GstLibcameraPool *self)
-{
-	GLibLocker lock(GST_OBJECT(self));
-	GstBuffer *buf;
-
-	if (self->queue->empty())
-		return nullptr;
-
-	buf = self->queue->front();
-	self->queue->pop_front();
-
-	return buf;
-}
-
 static GstFlowReturn
 gst_libcamera_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
 				  [[maybe_unused]] GstBufferPoolAcquireParams *params)
 {
 	GstLibcameraPool *self = GST_LIBCAMERA_POOL(pool);
-	GstBuffer *buf = gst_libcamera_pool_pop_buffer(self);
-
+	GstBuffer *buf = GST_BUFFER(gst_atomic_queue_pop(self->queue));
 	if (!buf)
 		return GST_FLOW_ERROR;
 
 	if (!gst_libcamera_allocator_prepare_buffer(self->allocator, self->stream, buf)) {
-		GLibLocker lock(GST_OBJECT(self));
-		self->queue->push_back(buf);
+		gst_atomic_queue_push(self->queue, buf);
 		return GST_FLOW_ERROR;
 	}
 
@@ -82,13 +64,9 @@ static void
 gst_libcamera_pool_release_buffer(GstBufferPool *pool, GstBuffer *buffer)
 {
 	GstLibcameraPool *self = GST_LIBCAMERA_POOL(pool);
-	bool do_notify;
+	bool do_notify = gst_atomic_queue_length(self->queue) == 0;
 
-	{
-		GLibLocker lock(GST_OBJECT(self));
-		do_notify = self->queue->empty();
-		self->queue->push_back(buffer);
-	}
+	gst_atomic_queue_push(self->queue, buffer);
 
 	if (do_notify)
 		g_signal_emit(self, signals[SIGNAL_BUFFER_NOTIFY], 0);
@@ -97,7 +75,7 @@ gst_libcamera_pool_release_buffer(GstBufferPool *pool, GstBuffer *buffer)
 static void
 gst_libcamera_pool_init(GstLibcameraPool *self)
 {
-	self->queue = new std::deque<GstBuffer *>();
+	self->queue = gst_atomic_queue_new(4);
 }
 
 static void
@@ -106,10 +84,10 @@ gst_libcamera_pool_finalize(GObject *object)
 	GstLibcameraPool *self = GST_LIBCAMERA_POOL(object);
 	GstBuffer *buf;
 
-	while ((buf = gst_libcamera_pool_pop_buffer(self)))
+	while ((buf = GST_BUFFER(gst_atomic_queue_pop(self->queue))))
 		gst_buffer_unref(buf);
 
-	delete self->queue;
+	gst_atomic_queue_unref(self->queue);
 	g_object_unref(self->allocator);
 
 	G_OBJECT_CLASS(gst_libcamera_pool_parent_class)->finalize(object);
@@ -144,7 +122,7 @@ gst_libcamera_pool_new(GstLibcameraAllocator *allocator, Stream *stream)
 	gsize pool_size = gst_libcamera_allocator_get_pool_size(allocator, stream);
 	for (gsize i = 0; i < pool_size; i++) {
 		GstBuffer *buffer = gst_buffer_new();
-		pool->queue->push_back(buffer);
+		gst_atomic_queue_push(pool->queue, buffer);
 	}
 
 	return pool;

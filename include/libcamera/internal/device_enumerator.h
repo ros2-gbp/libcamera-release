@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2018, Google Inc.
  *
- * API to enumerate and find media devices
+ * device_enumerator.h - API to enumerate and find media devices
  */
 
 #pragma once

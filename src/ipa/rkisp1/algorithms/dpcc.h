@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021-2022, Ideas On Board
  *
- * RkISP1 Defect Pixel Cluster Correction control
+ * dpcc.h - RkISP1 Defect Pixel Cluster Correction control
  */
 
 #pragma once

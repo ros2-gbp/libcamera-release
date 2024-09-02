@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * File Sink
+ * file_sink.h - File Sink
  */
 
 #pragma once

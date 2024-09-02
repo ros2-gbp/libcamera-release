@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Message queue support
+ * message.cpp - Message queue support
  */
 
 #include <libcamera/base/message.h>

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Cross-thread Object method invocation test
+ * object-invoke.cpp - Cross-thread Object method invocation test
  */
 
 #include <iostream>

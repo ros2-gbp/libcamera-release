@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Generic Android frame buffer backend
+ * generic_camera_buffer.cpp - Generic Android frame buffer backend
  */
 
 #include "../camera_buffer.h"

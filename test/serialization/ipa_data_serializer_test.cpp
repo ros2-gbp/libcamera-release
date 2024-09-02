@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Test serializing/deserializing with IPADataSerializer
+ * ipa_data_serializer_test.cpp - Test serializing/deserializing with IPADataSerializer
  */
 
 #include <algorithm>

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * File descriptor event notifier
+ * event_notifier.h - File descriptor event notifier
  */
 
 #pragma once

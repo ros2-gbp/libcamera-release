@@ -24,7 +24,6 @@ v4l2_compat_cpp_args = [
     '-U_FILE_OFFSET_BITS',
     '-D_FILE_OFFSET_BITS=32',
     '-D_LARGEFILE64_SOURCE',
-    '-U_TIME_BITS',
     '-fvisibility=hidden',
 ]
 
@@ -45,5 +44,4 @@ cdata.set('LIBCAMERA_V4L2_SO', get_option('prefix') / libcamera_libexecdir / 'v4
 configure_file(input : 'libcamerify.in',
                output : 'libcamerify',
                configuration : cdata,
-               install_dir : get_option('bindir'),
-               install_tag : 'bin')
+               install_dir : get_option('bindir'))

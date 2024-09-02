@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Raspberry Pi Ltd
  *
- * Bayer Pixel Format
+ * bayer_format.h - Bayer Pixel Format
  */
 
 #pragma once
@@ -34,8 +34,6 @@ public:
 		None = 0,
 		CSI2 = 1,
 		IPU3 = 2,
-		PISP1 = 3,
-		PISP2 = 4,
 	};
 
 	constexpr BayerFormat()

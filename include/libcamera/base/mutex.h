@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Mutex classes with clang thread safety annotation
+ * mutex.h - Mutex classes with clang thread safety annotation
  */
 
 #pragma once

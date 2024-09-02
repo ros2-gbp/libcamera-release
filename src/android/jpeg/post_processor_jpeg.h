@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * JPEG Post Processor
+ * post_processor_jpeg.h - JPEG Post Processor
  */
 
 #pragma once

@@ -9,7 +9,7 @@ cat <<EOF > "$dst_file"
 /*
  * Copyright (C) 2018-2019, Google Inc.
  *
- * libcamera public API
+ * libcamera.h - libcamera public API
  */
 
 #pragma once

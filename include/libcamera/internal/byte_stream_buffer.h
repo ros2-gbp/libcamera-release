@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Byte stream buffer
+ * byte_stream_buffer.h - Byte stream buffer
  */
 
 #pragma once

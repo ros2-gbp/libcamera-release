@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Control handling
+ * controls.h - Control handling
  */
 
 #pragma once
@@ -352,11 +352,6 @@ private:
 	using ControlListMap = std::unordered_map<unsigned int, ControlValue>;
 
 public:
-	enum class MergePolicy {
-		KeepExisting = 0,
-		OverwriteExisting,
-	};
-
 	ControlList();
 	ControlList(const ControlIdMap &idmap, const ControlValidator *validator = nullptr);
 	ControlList(const ControlInfoMap &infoMap, const ControlValidator *validator = nullptr);
@@ -373,7 +368,7 @@ public:
 	std::size_t size() const { return controls_.size(); }
 
 	void clear() { controls_.clear(); }
-	void merge(const ControlList &source, MergePolicy policy = MergePolicy::KeepExisting);
+	void merge(const ControlList &source);
 
 	bool contains(unsigned int id) const;
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Video stream for a Camera
+ * stream.h - Video stream for a Camera
  */
 
 #pragma once

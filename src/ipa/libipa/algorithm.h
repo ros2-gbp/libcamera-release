@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas On Board
  *
- * ISP control algorithm interface
+ * algorithm.h - ISP control algorithm interface
  */
 #pragma once
 

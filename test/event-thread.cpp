@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Threaded event test
+ * event-thread.cpp - Threaded event test
  */
 
 #include <chrono>
@@ -11,7 +11,6 @@
 #include <unistd.h>
 
 #include <libcamera/base/event_notifier.h>
-#include <libcamera/base/object.h>
 #include <libcamera/base/thread.h>
 #include <libcamera/base/timer.h>
 
@@ -85,17 +84,10 @@ private:
 class EventThreadTest : public Test
 {
 protected:
-	int init()
-	{
-		thread_.start();
-
-		handler_ = new EventHandler();
-
-		return TestPass;
-	}
-
 	int run()
 	{
+		Thread thread;
+		thread.start();
 
 		/*
 		 * Fire the event notifier and then move the notifier to a
@@ -105,33 +97,23 @@ protected:
 		 * different thread will correctly process already pending
 		 * events in the new thread.
 		 */
-		handler_->notify();
-		handler_->moveToThread(&thread_);
+		EventHandler handler;
+		handler.notify();
+		handler.moveToThread(&thread);
 
 		this_thread::sleep_for(chrono::milliseconds(100));
 
-		if (!handler_->notified()) {
+		/* Must stop thread before destroying the handler. */
+		thread.exit(0);
+		thread.wait();
+
+		if (!handler.notified()) {
 			cout << "Thread event handling test failed" << endl;
 			return TestFail;
 		}
 
 		return TestPass;
 	}
-
-	void cleanup()
-	{
-		/*
-		 * Object class instances must be destroyed from the thread
-		 * they live in.
-		 */
-		handler_->deleteLater();
-		thread_.exit(0);
-		thread_.wait();
-	}
-
-private:
-	EventHandler *handler_;
-	Thread thread_;
 };
 
 TEST_REGISTER(EventThreadTest)

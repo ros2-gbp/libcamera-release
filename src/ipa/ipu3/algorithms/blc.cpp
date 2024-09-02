@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google inc.
  *
- * IPU3 Black Level Correction control
+ * blc.cpp - IPU3 Black Level Correction control
  */
 
 #include "blc.h"

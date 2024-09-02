@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Base class for serialization tests
+ * serialization_test.h - Base class for serialization tests
  */
 
 #pragma once

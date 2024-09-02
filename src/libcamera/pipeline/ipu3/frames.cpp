@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * Intel IPU3 Frames helper
+ * frames.cpp - Intel IPU3 Frames helper
  */
 
 #include "frames.h"

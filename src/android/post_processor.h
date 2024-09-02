@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * CameraStream Post Processing Interface
+ * post_processor.h - CameraStream Post Processing Interface
  */
 
 #pragma once

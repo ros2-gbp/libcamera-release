@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022, Paul Elder <paul.elder@ideasonboard.com>
 #
-# Wrapper for numpy averaging functions to enable duck-typing
+# average.py - Wrapper for numpy averaging functions to enable duck-typing
 
 import numpy as np
 

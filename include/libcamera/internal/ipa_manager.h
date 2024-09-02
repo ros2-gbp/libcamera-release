@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Image Processing Algorithm module manager
+ * ipa_manager.h - Image Processing Algorithm module manager
  */
 
 #pragma once

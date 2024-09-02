@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas on Board Oy
  *
- * SDL Texture
+ * sdl_texture.cpp - SDL Texture
  */
 
 #include "sdl_texture.h"

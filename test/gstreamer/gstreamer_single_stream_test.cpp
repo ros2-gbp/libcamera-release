@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Vedant Paranjape
  *
- * GStreamer single stream capture test
+ * gstreamer_single_stream_test.cpp - GStreamer single stream capture test
  */
 
 #include <iostream>
@@ -29,21 +29,30 @@ protected:
 		if (status_ != TestPass)
 			return status_;
 
-		fakesink_ = gst_element_factory_make("fakesink", nullptr);
-		if (!fakesink_) {
-			g_printerr("Your installation is missing 'fakesink'\n");
+		const gchar *streamDescription = "videoconvert ! fakesink";
+		g_autoptr(GError) error0 = NULL;
+		stream0_ = gst_parse_bin_from_description_full(streamDescription, TRUE,
+						NULL,
+						GST_PARSE_FLAG_FATAL_ERRORS,
+						&error0);
+
+		if (!stream0_) {
+			g_printerr("Bin could not be created (%s)\n", error0->message);
 			return TestFail;
 		}
-		g_object_ref_sink(fakesink_);
+		g_object_ref_sink(stream0_);
 
-		return createPipeline();
+		if (createPipeline() != TestPass)
+			return TestFail;
+
+		return TestPass;
 	}
 
 	int run() override
 	{
 		/* Build the pipeline */
-		gst_bin_add_many(GST_BIN(pipeline_), libcameraSrc_, fakesink_, nullptr);
-		if (!gst_element_link(libcameraSrc_, fakesink_)) {
+		gst_bin_add_many(GST_BIN(pipeline_), libcameraSrc_, stream0_, NULL);
+		if (gst_element_link(libcameraSrc_, stream0_) != TRUE) {
 			g_printerr("Elements could not be linked.\n");
 			return TestFail;
 		}
@@ -59,11 +68,11 @@ protected:
 
 	void cleanup() override
 	{
-		g_clear_object(&fakesink_);
+		g_clear_object(&stream0_);
 	}
 
 private:
-	GstElement *fakesink_;
+	GstElement *stream0_;
 };
 
 TEST_REGISTER(GstreamerSingleStreamTest)

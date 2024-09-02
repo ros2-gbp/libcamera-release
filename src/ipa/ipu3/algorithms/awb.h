@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas On Board
  *
- * IPU3 AWB control algorithm
+ * awb.h - IPU3 AWB control algorithm
  */
 
 #pragma once

@@ -59,8 +59,6 @@ protected:
 		request->reuse();
 		request->addBuffer(stream, buffer);
 		camera_->queueRequest(request);
-
-		dispatcher_->interrupt();
 	}
 
 	int init() override
@@ -75,7 +73,6 @@ protected:
 		}
 
 		allocator_ = new FrameBufferAllocator(camera_);
-		dispatcher_ = Thread::current()->eventDispatcher();
 
 		return TestPass;
 	}
@@ -138,20 +135,19 @@ protected:
 			}
 		}
 
-		unsigned int nFrames = allocator_->buffers(stream).size() * 2;
+		EventDispatcher *dispatcher = Thread::current()->eventDispatcher();
 
 		Timer timer;
-		timer.start(500ms * nFrames);
-		while (timer.isRunning()) {
-			dispatcher_->processEvents();
-			if (completeRequestsCount_ > nFrames)
-				break;
-		}
+		timer.start(1000ms);
+		while (timer.isRunning())
+			dispatcher->processEvents();
 
-		if (completeRequestsCount_ < nFrames) {
+		unsigned int nbuffers = allocator_->buffers(stream).size();
+
+		if (completeRequestsCount_ < nbuffers * 2) {
 			cout << "Failed to capture enough frames (got "
 			     << completeRequestsCount_ << " expected at least "
-			     << nFrames * 2 << ")" << endl;
+			     << nbuffers * 2 << ")" << endl;
 			return TestFail;
 		}
 
@@ -167,8 +163,6 @@ protected:
 
 		return TestPass;
 	}
-
-	EventDispatcher *dispatcher_;
 
 	std::vector<std::unique_ptr<Request>> requests_;
 

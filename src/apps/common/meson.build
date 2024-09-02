@@ -3,7 +3,6 @@
 apps_sources = files([
     'image.cpp',
     'options.cpp',
-    'ppm_writer.cpp',
     'stream_options.cpp',
 ])
 

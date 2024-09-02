@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Collabora Ltd.
  *
- * Common environment for tests
+ * environment.h - Common environment for tests
  */
 
 #pragma once

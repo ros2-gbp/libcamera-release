@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * libcamera delayed controls test
+ * delayed_controls.cpp - libcamera delayed controls test
  */
 
 #include <iostream>

@@ -30,7 +30,7 @@ Getting Started
 
 To fetch the sources, build and install:
 
-.. code::
+::
 
   git clone https://git.libcamera.org/libcamera/libcamera.git
   cd libcamera
@@ -47,7 +47,15 @@ A C++ toolchain: [required]
         Either {g++, clang}
 
 Meson Build system: [required]
-        meson (>= 0.60) ninja-build pkg-config
+        meson (>= 0.56) ninja-build pkg-config
+
+        If your distribution doesn't provide a recent enough version of meson,
+        you can install or upgrade it using pip3.
+
+        .. code::
+
+            pip3 install --user meson
+            pip3 install --user --upgrade meson
 
 for the libcamera core: [required]
         libyaml-dev python3-yaml python3-ply python3-jinja2
@@ -75,9 +83,6 @@ for documentation: [optional]
 for gstreamer: [optional]
         libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
-for Python bindings: [optional]
-        libpython3-dev pybind11-dev
-
 for cam: [optional]
         libevent-dev is required to support cam, however the following
         optional dependencies bring more functionality to the cam test
@@ -88,7 +93,7 @@ for cam: [optional]
         - libsdl2-dev: Enables the SDL sink
 
 for qcam: [optional]
-        libtiff-dev qt6-base-dev qt6-tools-dev-tools
+        qtbase5-dev libqt5core5a libqt5gui5 libqt5widgets5 qttools5-dev-tools libtiff-dev
 
 for tracing with lttng: [optional]
         liblttng-ust-dev python3-jinja2 lttng-tools
@@ -96,11 +101,8 @@ for tracing with lttng: [optional]
 for android: [optional]
         libexif-dev libjpeg-dev
 
-for Python bindings: [optional]
-        pybind11-dev
-
 for lc-compliance: [optional]
-        libevent-dev libgtest-dev
+        libevent-dev
 
 for abi-compat.sh: [optional]
         abi-compliance-checker
@@ -123,13 +125,10 @@ setting the ``LIBCAMERA_LOG_LEVELS`` environment variable:
 Using GStreamer plugin
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To use the GStreamer plugin from the source tree, use the meson ``devenv``
-command.  This will create a new shell instance with the ``GST_PLUGIN_PATH``
-environment set accordingly.
+To use GStreamer plugin from source tree, set the following environment so that
+GStreamer can find it. This isn't necessary when libcamera is installed.
 
-.. code::
-
-  meson devenv -C build
+  export GST_PLUGIN_PATH=$(pwd)/build/src/gstreamer
 
 The debugging tool ``gst-launch-1.0`` can be used to construct a pipeline and
 test it. The following pipeline will stream from the camera named "Camera 1"
@@ -137,7 +136,7 @@ onto the OpenGL accelerated display element on your system.
 
 .. code::
 
-  gst-launch-1.0 libcamerasrc camera-name="Camera 1" ! queue ! glimagesink
+  gst-launch-1.0 libcamerasrc camera-name="Camera 1" ! glimagesink
 
 To show the first camera found you can omit the camera-name property, or you
 can list the cameras and their capabilities using:
@@ -152,7 +151,7 @@ if desired with a pipeline such as:
 .. code::
 
   gst-launch-1.0 libcamerasrc ! 'video/x-raw,width=1280,height=720' ! \
-       queue ! glimagesink
+        glimagesink
 
 The libcamerasrc element has two log categories, named libcamera-provider (for
 the video device provider) and libcamerasrc (for the operation of the camera).
@@ -168,7 +167,7 @@ the following example could be used as a starting point:
 
    gst-launch-1.0 libcamerasrc ! \
         video/x-raw,colorimetry=bt709,format=NV12,width=1280,height=720,framerate=30/1 ! \
-        queue ! jpegenc ! multipartmux ! \
+        jpegenc ! multipartmux ! \
         tcpserversink host=0.0.0.0 port=5000
 
 Which can be received on another device over the network with:
@@ -177,22 +176,6 @@ Which can be received on another device over the network with:
 
    gst-launch-1.0 tcpclientsrc host=$DEVICE_IP port=5000 ! \
         multipartdemux ! jpegdec ! autovideosink
-
-The GStreamer element also supports multiple streams. This is achieved by
-requesting additional source pads. Downstream caps filters can be used
-to choose specific parameters like resolution and pixel format. The pad
-property ``stream-role`` can be used to select a role.
-
-The following example displays a 640x480 view finder while streaming JPEG
-encoded 800x600 video. You can use the receiver pipeline above to view the
-remote stream from another device.
-
-.. code::
-
-   gst-launch-1.0 libcamerasrc name=cs src::stream-role=view-finder src_0::stream-role=video-recording \
-       cs.src ! queue ! video/x-raw,width=640,height=480 ! videoconvert ! autovideosink \
-       cs.src_0 ! queue ! video/x-raw,width=800,height=600 ! videoconvert ! \
-       jpegenc ! multipartmux ! tcpserversink host=0.0.0.0 port=5000
 
 .. section-end-getting-started
 
@@ -211,8 +194,8 @@ the build.ninja module. This is a snippet of the error message.
 
 This can be solved in two ways:
 
-1. Don't install meson again if it is already installed system-wide.
+1) Don't install meson again if it is already installed system-wide.
 
-2. If a version of meson which is different from the system-wide version is
-   already installed, uninstall that meson using pip3, and install again without
-   the --user argument.
+2) If a version of meson which is different from the system-wide version is
+already installed, uninstall that meson using pip3, and install again without
+the --user argument.

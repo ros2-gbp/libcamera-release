@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Intel IPU3 CIO2
+ * cio2.h - Intel IPU3 CIO2
  */
 
 #pragma once

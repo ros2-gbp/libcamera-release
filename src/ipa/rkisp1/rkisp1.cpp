@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * RkISP1 Image Processing Algorithms
+ * rkisp1.cpp - RkISP1 Image Processing Algorithms
  */
 
 #include <algorithm>
@@ -29,6 +29,7 @@
 #include "libcamera/internal/yaml_parser.h"
 
 #include "algorithms/algorithm.h"
+#include "libipa/camera_sensor_helper.h"
 
 #include "ipa_context.h"
 
@@ -80,30 +81,29 @@ private:
 
 	ControlInfoMap sensorControls_;
 
+	/* revision-specific data */
+	rkisp1_cif_isp_version hwRevision_;
+	unsigned int hwHistBinNMax_;
+	unsigned int hwGammaOutMaxSamples_;
+	unsigned int hwHistogramWeightGridsSize_;
+
+	/* Interface to the Camera Helper */
+	std::unique_ptr<CameraSensorHelper> camHelper_;
+
 	/* Local parameter storage */
 	struct IPAContext context_;
 };
 
 namespace {
 
-const IPAHwSettings ipaHwSettingsV10{
-	RKISP1_CIF_ISP_AE_MEAN_MAX_V10,
-	RKISP1_CIF_ISP_HIST_BIN_N_MAX_V10,
-	RKISP1_CIF_ISP_HISTOGRAM_WEIGHT_GRIDS_SIZE_V10,
-	RKISP1_CIF_ISP_GAMMA_OUT_MAX_SAMPLES_V10,
-};
-
-const IPAHwSettings ipaHwSettingsV12{
-	RKISP1_CIF_ISP_AE_MEAN_MAX_V12,
-	RKISP1_CIF_ISP_HIST_BIN_N_MAX_V12,
-	RKISP1_CIF_ISP_HISTOGRAM_WEIGHT_GRIDS_SIZE_V12,
-	RKISP1_CIF_ISP_GAMMA_OUT_MAX_SAMPLES_V12,
-};
-
 /* List of controls handled by the RkISP1 IPA */
 const ControlInfoMap::Map rkisp1Controls{
+	{ &controls::AeEnable, ControlInfo(false, true) },
 	{ &controls::AwbEnable, ControlInfo(false, true) },
 	{ &controls::ColourGains, ControlInfo(0.0f, 3.996f, 1.0f) },
+	{ &controls::Brightness, ControlInfo(-1.0f, 0.993f, 0.0f) },
+	{ &controls::Contrast, ControlInfo(0.0f, 1.993f, 1.0f) },
+	{ &controls::Saturation, ControlInfo(0.0f, 1.993f, 1.0f) },
 	{ &controls::Sharpness, ControlInfo(0.0f, 10.0f, 1.0f) },
 	{ &controls::draft::NoiseReductionMode, ControlInfo(controls::draft::NoiseReductionModeValues) },
 };
@@ -111,7 +111,7 @@ const ControlInfoMap::Map rkisp1Controls{
 } /* namespace */
 
 IPARkISP1::IPARkISP1()
-	: context_({ {}, {}, {}, { kMaxFrameContexts }, {}, {} })
+	: context_({ {}, {}, { kMaxFrameContexts } })
 {
 }
 
@@ -128,11 +128,14 @@ int IPARkISP1::init(const IPASettings &settings, unsigned int hwRevision,
 	/* \todo Add support for other revisions */
 	switch (hwRevision) {
 	case RKISP1_V10:
-	case RKISP1_V_IMX8MP:
-		context_.hw = &ipaHwSettingsV10;
+		hwHistBinNMax_ = RKISP1_CIF_ISP_HIST_BIN_N_MAX_V10;
+		hwGammaOutMaxSamples_ = RKISP1_CIF_ISP_GAMMA_OUT_MAX_SAMPLES_V10;
+		hwHistogramWeightGridsSize_ = RKISP1_CIF_ISP_HISTOGRAM_WEIGHT_GRIDS_SIZE_V10;
 		break;
 	case RKISP1_V12:
-		context_.hw = &ipaHwSettingsV12;
+		hwHistBinNMax_ = RKISP1_CIF_ISP_HIST_BIN_N_MAX_V12;
+		hwGammaOutMaxSamples_ = RKISP1_CIF_ISP_GAMMA_OUT_MAX_SAMPLES_V12;
+		hwHistogramWeightGridsSize_ = RKISP1_CIF_ISP_HISTOGRAM_WEIGHT_GRIDS_SIZE_V12;
 		break;
 	default:
 		LOG(IPARkISP1, Error)
@@ -143,8 +146,11 @@ int IPARkISP1::init(const IPASettings &settings, unsigned int hwRevision,
 
 	LOG(IPARkISP1, Debug) << "Hardware revision is " << hwRevision;
 
-	context_.camHelper = CameraSensorHelperFactoryBase::create(settings.sensorModel);
-	if (!context_.camHelper) {
+	/* Cache the value to set it in configure. */
+	hwRevision_ = static_cast<rkisp1_cif_isp_version>(hwRevision);
+
+	camHelper_ = CameraSensorHelperFactoryBase::create(settings.sensorModel);
+	if (!camHelper_) {
 		LOG(IPARkISP1, Error)
 			<< "Failed to create camera sensor helper for "
 			<< settings.sensorModel;
@@ -226,6 +232,9 @@ int IPARkISP1::configure(const IPAConfigInfo &ipaConfig,
 	context_.activeState = {};
 	context_.frameContexts.clear();
 
+	/* Set the hardware revision for the algorithms. */
+	context_.configuration.hw.revision = hwRevision_;
+
 	const IPACameraSensorInfo &info = ipaConfig.sensorInfo;
 	const ControlInfo vBlank = sensorControls_.find(V4L2_CID_VBLANK)->second;
 	context_.configuration.sensor.defVBlank = vBlank.def().get<int32_t>();
@@ -246,10 +255,8 @@ int IPARkISP1::configure(const IPAConfigInfo &ipaConfig,
 		minExposure * context_.configuration.sensor.lineDuration;
 	context_.configuration.sensor.maxShutterSpeed =
 		maxExposure * context_.configuration.sensor.lineDuration;
-	context_.configuration.sensor.minAnalogueGain =
-		context_.camHelper->gain(minGain);
-	context_.configuration.sensor.maxAnalogueGain =
-		context_.camHelper->gain(maxGain);
+	context_.configuration.sensor.minAnalogueGain = camHelper_->gain(minGain);
+	context_.configuration.sensor.maxAnalogueGain = camHelper_->gain(maxGain);
 
 	context_.configuration.raw = std::any_of(streamConfig.begin(), streamConfig.end(),
 		[](auto &cfg) -> bool {
@@ -350,7 +357,7 @@ void IPARkISP1::processStatsBuffer(const uint32_t frame, const uint32_t bufferId
 	frameContext.sensor.exposure =
 		sensorControls.get(V4L2_CID_EXPOSURE).get<int32_t>();
 	frameContext.sensor.gain =
-		context_.camHelper->gain(sensorControls.get(V4L2_CID_ANALOGUE_GAIN).get<int32_t>());
+		camHelper_->gain(sensorControls.get(V4L2_CID_ANALOGUE_GAIN).get<int32_t>());
 
 	ControlList metadata(controls::controls);
 
@@ -387,9 +394,9 @@ void IPARkISP1::updateControls(const IPACameraSensorInfo &sensorInfo,
 
 	/* Compute the analogue gain limits. */
 	const ControlInfo &v4l2Gain = sensorControls.find(V4L2_CID_ANALOGUE_GAIN)->second;
-	float minGain = context_.camHelper->gain(v4l2Gain.min().get<int32_t>());
-	float maxGain = context_.camHelper->gain(v4l2Gain.max().get<int32_t>());
-	float defGain = context_.camHelper->gain(v4l2Gain.def().get<int32_t>());
+	float minGain = camHelper_->gain(v4l2Gain.min().get<int32_t>());
+	float maxGain = camHelper_->gain(v4l2Gain.max().get<int32_t>());
+	float defGain = camHelper_->gain(v4l2Gain.def().get<int32_t>());
 	ctrlMap.emplace(std::piecewise_construct,
 			std::forward_as_tuple(&controls::AnalogueGain),
 			std::forward_as_tuple(minGain, maxGain, defGain));
@@ -421,7 +428,6 @@ void IPARkISP1::updateControls(const IPACameraSensorInfo &sensorInfo,
 							      frameDurations[1],
 							      frameDurations[2]);
 
-	ctrlMap.insert(context_.ctrlMap.begin(), context_.ctrlMap.end());
 	*ipaControls = ControlInfoMap(std::move(ctrlMap), controls::controls);
 }
 
@@ -434,7 +440,7 @@ void IPARkISP1::setControls(unsigned int frame)
 
 	IPAFrameContext &frameContext = context_.frameContexts.get(frame);
 	uint32_t exposure = frameContext.agc.exposure;
-	uint32_t gain = context_.camHelper->gainCode(frameContext.agc.gain);
+	uint32_t gain = camHelper_->gainCode(frameContext.agc.gain);
 
 	ControlList ctrls(sensorControls_);
 	ctrls.set(V4L2_CID_EXPOSURE, static_cast<int32_t>(exposure));
@@ -453,7 +459,7 @@ extern "C" {
 const struct IPAModuleInfo ipaModuleInfo = {
 	IPA_MODULE_API_VERSION,
 	1,
-	"rkisp1",
+	"PipelineHandlerRkISP1",
 	"rkisp1",
 };
 

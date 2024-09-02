@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * libcamera camera test helper to create FrameBuffers
+ * buffer_source.h - libcamera camera test helper to create FrameBuffers
  */
 
 #pragma once

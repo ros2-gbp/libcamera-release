@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Google Inc.
  *
- * JPEG Post Processor
+ * post_processor_jpeg.cpp - JPEG Post Processor
  */
 
 #include "post_processor_jpeg.h"

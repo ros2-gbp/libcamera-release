@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Image Processing Algorithm proxy
+ * ipa_proxy.cpp - Image Processing Algorithm proxy
  */
 
 #include "libcamera/internal/ipa_proxy.h"

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Camera controls
+ * camera_controls.cpp - Camera controls
  */
 
 #include "libcamera/internal/camera_controls.h"

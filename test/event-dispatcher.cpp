@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2019, Google Inc.
  *
- * Event dispatcher test
+ * event-dispatcher.cpp - Event dispatcher test
  */
 
 #include <chrono>

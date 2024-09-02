@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2020, Raspberry Pi Ltd
  *
- * camera helper for imx477 sensor
+ * cam_helper_imx477.cpp - camera helper for imx477 sensor
  */
 
 #include <algorithm>

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Ideas on Board Oy
  *
- * Call stack backtraces
+ * backtrace.h - Call stack backtraces
  */
 
 #include <libcamera/base/backtrace.h>

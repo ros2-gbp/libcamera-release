@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022, Ideas on Board Oy
  *
- * Capture session configuration script
+ * capture_script.h - Capture session configuration script
  */
 
 #pragma once

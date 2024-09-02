@@ -2,15 +2,14 @@
 /*
  * Copyright (C) 2022-2023, Raspberry Pi Ltd
  *
- * Autofocus control algorithm
+ * af.h - Autofocus control algorithm
  */
 #pragma once
 
 #include "../af_algorithm.h"
 #include "../af_status.h"
 #include "../pdaf_data.h"
-
-#include "libipa/pwl.h"
+#include "../pwl.h"
 
 /*
  * This algorithm implements a hybrid of CDAF and PDAF, favouring PDAF.
@@ -101,7 +100,7 @@ private:
 		uint32_t confThresh;	       	/* PDAF confidence cell min (sensor-specific) */
 		uint32_t confClip;	       	/* PDAF confidence cell max (sensor-specific) */
 		uint32_t skipFrames;	       	/* frames to skip at start or modeswitch */
-		libcamera::ipa::Pwl map;       	/* converts dioptres -> lens driver position */
+		Pwl map;		       	/* converts dioptres -> lens driver position */
 
 		CfgParams();
 		int read(const libcamera::YamlObject &params);

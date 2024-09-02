@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2021, Google Inc.
  *
- * Fence test
+ * fence.cpp - Fence test
  */
 
 #include <iostream>
@@ -43,6 +43,7 @@ private:
 
 	void signalFence();
 
+	std::unique_ptr<Fence> fence_;
 	EventDispatcher *dispatcher_;
 	UniqueFD eventFd_;
 	UniqueFD eventFd2_;
@@ -57,11 +58,8 @@ private:
 	bool expectedCompletionResult_ = true;
 	bool setFence_ = true;
 
-	/*
-	 * Request IDs track the number of requests that have completed. They
-	 * are one-based, and don't wrap.
-	 */
-	unsigned int completedRequestId_;
+	unsigned int completedRequest_;
+
 	unsigned int signalledRequestId_;
 	unsigned int expiredRequestId_;
 	unsigned int nbuffers_;
@@ -129,19 +127,8 @@ int FenceTest::init()
 		return TestFail;
 	}
 
-	completedRequestId_ = 0;
-
-	/*
-	 * All but two requests are queued without a fence. Request
-	 * expiredRequestId_ will be queued with a fence that we won't signal
-	 * (which is then expected to expire), and request signalledRequestId_
-	 * will be queued with a fence that gets signalled. Select nbuffers_
-	 * and nbuffers_ * 2 for those two requests, to space them by a few
-	 * frames while still not requiring a long time for the test to
-	 * complete.
-	 */
-	expiredRequestId_ = nbuffers_;
-	signalledRequestId_ = nbuffers_ * 2;
+	signalledRequestId_ = nbuffers_ - 2;
+	expiredRequestId_ = nbuffers_ - 1;
 
 	return TestPass;
 }
@@ -203,16 +190,16 @@ void FenceTest::requestRequeue(Request *request)
 	const Request::BufferMap &buffers = request->buffers();
 	const Stream *stream = buffers.begin()->first;
 	FrameBuffer *buffer = buffers.begin()->second;
+	uint64_t cookie = request->cookie();
 
 	request->reuse();
 
-	if (completedRequestId_ == signalledRequestId_ - nbuffers_ && setFence_) {
+	if (cookie == signalledRequestId_ && setFence_) {
 		/*
-		 * This is the request that will be used to test fence
-		 * signalling when it completes next time. Add a fence to it,
-		 * using efd2_. The main loop will signal the fence by using a
-		 * timer to write to the efd2_ file descriptor before the fence
-		 * expires.
+		 * The second time this request is queued add a fence to it.
+		 *
+		 * The main loop signals it by using a timer to write to the
+		 * efd2_ file descriptor before the fence expires.
 		 */
 		std::unique_ptr<Fence> fence =
 			std::make_unique<Fence>(std::move(eventFd2_));
@@ -227,15 +214,16 @@ void FenceTest::requestRequeue(Request *request)
 
 void FenceTest::requestComplete(Request *request)
 {
-	completedRequestId_++;
+	uint64_t cookie = request->cookie();
+	completedRequest_ = cookie;
 
 	/*
-	 * Request expiredRequestId_ is expected to fail as its fence has not
-	 * been signalled.
+	 * The last request is expected to fail as its fence has not been
+	 * signaled.
 	 *
 	 * Validate the fence status but do not re-queue it.
 	 */
-	if (completedRequestId_ == expiredRequestId_) {
+	if (cookie == expiredRequestId_) {
 		if (validateExpiredRequest(request) != TestPass)
 			expectedCompletionResult_ = false;
 
@@ -243,7 +231,7 @@ void FenceTest::requestComplete(Request *request)
 		return;
 	}
 
-	/* Validate all other requests. */
+	/* Validate all requests but the last. */
 	if (validateRequest(request) != TestPass) {
 		expectedCompletionResult_ = false;
 
@@ -284,16 +272,15 @@ int FenceTest::run()
 		}
 
 		int ret;
-		if (i == expiredRequestId_ - 1) {
+		if (i == expiredRequestId_) {
 			/* This request will have a fence, and it will expire. */
-			std::unique_ptr<Fence> fence =
-				std::make_unique<Fence>(std::move(eventFd_));
-			if (!fence->isValid()) {
+			fence_ = std::make_unique<Fence>(std::move(eventFd_));
+			if (!fence_->isValid()) {
 				cerr << "Fence should be valid" << endl;
 				return TestFail;
 			}
 
-			ret = request->addBuffer(stream_, buffer.get(), std::move(fence));
+			ret = request->addBuffer(stream_, buffer.get(), std::move(fence_));
 		} else {
 			/* All other requests will have no Fence. */
 			ret = request->addBuffer(stream_, buffer.get());
@@ -327,21 +314,15 @@ int FenceTest::run()
 	Timer fenceTimer;
 	fenceTimer.timeout.connect(this, &FenceTest::signalFence);
 
-	/*
-	 * Loop long enough for all requests to complete, allowing 500ms per
-	 * request.
-	 */
+	/* Loop for one second. */
 	Timer timer;
-	timer.start(500ms * (signalledRequestId_ + 1));
-	while (timer.isRunning() && expectedCompletionResult_ &&
-	       completedRequestId_ <= signalledRequestId_ + 1) {
-		if (completedRequestId_ == signalledRequestId_ - 1 && setFence_)
+	timer.start(1000ms);
+	while (timer.isRunning() && expectedCompletionResult_) {
+		if (completedRequest_ == signalledRequestId_ && setFence_)
 			/*
-			 * The request just before signalledRequestId_ has just
-			 * completed. Request signalledRequestId_ has been
-			 * queued with a fence, and libcamera is likely already
-			 * waiting on the fence, or will soon. Start the timer
-			 * to signal the fence in 10 msec.
+			 * signalledRequestId_ has just completed and it has
+			 * been re-queued with a fence. Start the timer to
+			 * signal the fence in 10 msec.
 			 */
 			fenceTimer.start(10ms);
 
