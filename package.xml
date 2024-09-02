@@ -3,7 +3,7 @@
 <package format="3">
   <name>libcamera</name>
 
-  <version>0.2.0</version>
+  <version>0.1.0</version>
 
   <description>An open source camera stack and framework for Linux, Android, and ChromeOS</description>
 
@@ -23,10 +23,12 @@
   <build_depend>python3-ply</build_depend>
   <build_depend>python3-jinja2</build_depend>
   <build_depend>openssl</build_depend>
+  <build_depend>pybind11-dev</build_depend>
 
   <depend>yaml</depend>
   <depend>libssl-dev</depend>
   <depend>libudev-dev</depend>
+  <depend>python3</depend>
 
   <!-- workaround for https://bugs.libcamera.org/show_bug.cgi?id=189 -->
   <depend>libatomic</depend>

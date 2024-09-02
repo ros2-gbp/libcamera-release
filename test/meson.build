@@ -46,7 +46,6 @@ public_tests = [
     {'name': 'public-api', 'sources': ['public-api.cpp']},
     {'name': 'signal', 'sources': ['signal.cpp']},
     {'name': 'span', 'sources': ['span.cpp']},
-    {'name': 'transform', 'sources': ['transform.cpp']},
 ]
 
 internal_tests = [

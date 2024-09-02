@@ -11,8 +11,6 @@
 
 namespace libcamera {
 
-enum class Orientation;
-
 enum class Transform : int {
 	Identity = 0,
 	Rot0 = Identity,
@@ -71,9 +69,6 @@ constexpr Transform operator~(Transform t)
 }
 
 Transform transformFromRotation(int angle, bool *success = nullptr);
-
-Transform operator/(const Orientation &o1, const Orientation &o2);
-Orientation operator*(const Orientation &o, const Transform &t);
 
 const char *transformToString(Transform t);
 

@@ -431,7 +431,7 @@ private:
 		if (ret)
 			return ret;
 
-		timeout.start(2s);
+		timeout.start(200ms);
 		while (!callDone_) {
 			if (!timeout.isRunning()) {
 				cerr << "Call timeout!" << endl;

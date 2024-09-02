@@ -5,5 +5,4 @@ conf_files = files([
 ])
 
 install_data(conf_files,
-             install_dir : pipeline_data_dir / 'rpi' / 'vc4',
-             install_tag : 'runtime')
+             install_dir : pipeline_data_dir / 'rpi' / 'vc4')
