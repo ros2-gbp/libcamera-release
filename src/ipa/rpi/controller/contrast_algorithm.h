@@ -17,8 +17,6 @@ public:
 	/* A contrast algorithm must provide the following: */
 	virtual void setBrightness(double brightness) = 0;
 	virtual void setContrast(double contrast) = 0;
-	virtual void enableCe(bool enable) = 0;
-	virtual void restoreCe() = 0;
 };
 
 } /* namespace RPiController */

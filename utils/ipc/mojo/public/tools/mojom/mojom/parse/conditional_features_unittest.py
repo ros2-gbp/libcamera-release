@@ -1,11 +1,12 @@
-# Copyright 2018 The Chromium Authors
+# Copyright 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import importlib.util
+import imp
 import os
 import sys
 import unittest
+
 
 def _GetDirAbove(dirname):
   """Returns the directory "above" this file containing |dirname| (which must
@@ -17,8 +18,9 @@ def _GetDirAbove(dirname):
     if tail == dirname:
       return path
 
+
 try:
-  importlib.util.find_spec("mojom")
+  imp.find_module('mojom')
 except ImportError:
   sys.path.append(os.path.join(_GetDirAbove('pylib'), 'pylib'))
 import mojom.parse.ast as ast
@@ -26,6 +28,7 @@ import mojom.parse.conditional_features as conditional_features
 import mojom.parse.parser as parser
 
 ENABLED_FEATURES = frozenset({'red', 'green', 'blue'})
+
 
 class ConditionalFeaturesTest(unittest.TestCase):
   """Tests |mojom.parse.conditional_features|."""
@@ -48,48 +51,6 @@ class ConditionalFeaturesTest(unittest.TestCase):
     expected_source = """
       [EnableIf=blue]
       const int kMyConst1 = 1;
-      const int kMyConst3 = 3;
-    """
-    self.parseAndAssertEqual(const_source, expected_source)
-
-  def testFilterIfNotConst(self):
-    """Test that Consts are correctly filtered."""
-    const_source = """
-      [EnableIfNot=blue]
-      const int kMyConst1 = 1;
-      [EnableIfNot=orange]
-      const double kMyConst2 = 2;
-      [EnableIf=blue]
-      const int kMyConst3 = 3;
-      [EnableIfNot=blue]
-      const int kMyConst4 = 4;
-      [EnableIfNot=purple]
-      const int kMyConst5 = 5;
-    """
-    expected_source = """
-      [EnableIfNot=orange]
-      const double kMyConst2 = 2;
-      [EnableIf=blue]
-      const int kMyConst3 = 3;
-      [EnableIfNot=purple]
-      const int kMyConst5 = 5;
-    """
-    self.parseAndAssertEqual(const_source, expected_source)
-
-  def testFilterIfNotMultipleConst(self):
-    """Test that Consts are correctly filtered."""
-    const_source = """
-      [EnableIfNot=blue]
-      const int kMyConst1 = 1;
-      [EnableIfNot=orange]
-      const double kMyConst2 = 2;
-      [EnableIfNot=orange]
-      const int kMyConst3 = 3;
-    """
-    expected_source = """
-      [EnableIfNot=orange]
-      const double kMyConst2 = 2;
-      [EnableIfNot=orange]
       const int kMyConst3 = 3;
     """
     self.parseAndAssertEqual(const_source, expected_source)
@@ -126,24 +87,6 @@ class ConditionalFeaturesTest(unittest.TestCase):
     expected_source = """
       [EnableIf=blue]
       import "foo.mojom";
-      import "bar.mojom";
-    """
-    self.parseAndAssertEqual(import_source, expected_source)
-
-  def testFilterIfNotImport(self):
-    """Test that imports are correctly filtered from a Mojom."""
-    import_source = """
-      [EnableIf=blue]
-      import "foo.mojom";
-      [EnableIfNot=purple]
-      import "bar.mojom";
-      [EnableIfNot=green]
-      import "baz.mojom";
-    """
-    expected_source = """
-      [EnableIf=blue]
-      import "foo.mojom";
-      [EnableIfNot=purple]
       import "bar.mojom";
     """
     self.parseAndAssertEqual(import_source, expected_source)
@@ -232,50 +175,6 @@ class ConditionalFeaturesTest(unittest.TestCase):
     """
     self.parseAndAssertEqual(struct_source, expected_source)
 
-  def testFilterIfNotStruct(self):
-    """Test that definitions are correctly filtered from a Struct."""
-    struct_source = """
-      struct MyStruct {
-        [EnableIf=blue]
-        enum MyEnum {
-          VALUE1,
-          [EnableIfNot=red]
-          VALUE2,
-        };
-        [EnableIfNot=yellow]
-        const double kMyConst = 1.23;
-        [EnableIf=green]
-        int32 a;
-        double b;
-        [EnableIfNot=purple]
-        int32 c;
-        [EnableIf=blue]
-        double d;
-        int32 e;
-        [EnableIfNot=red]
-        double f;
-      };
-    """
-    expected_source = """
-      struct MyStruct {
-        [EnableIf=blue]
-        enum MyEnum {
-          VALUE1,
-        };
-        [EnableIfNot=yellow]
-        const double kMyConst = 1.23;
-        [EnableIf=green]
-        int32 a;
-        double b;
-        [EnableIfNot=purple]
-        int32 c;
-        [EnableIf=blue]
-        double d;
-        int32 e;
-      };
-    """
-    self.parseAndAssertEqual(struct_source, expected_source)
-
   def testFilterUnion(self):
     """Test that UnionFields are correctly filtered from a Union."""
     union_source = """
@@ -317,25 +216,6 @@ class ConditionalFeaturesTest(unittest.TestCase):
     """
     self.parseAndAssertEqual(mojom_source, expected_source)
 
-  def testFeaturesWithEnableIf(self):
-    mojom_source = """
-      feature Foo {
-        const string name = "FooFeature";
-        [EnableIf=red]
-        const bool default_state = false;
-        [EnableIf=yellow]
-        const bool default_state = true;
-      };
-    """
-    expected_source = """
-      feature Foo {
-        const string name = "FooFeature";
-        [EnableIf=red]
-        const bool default_state = false;
-      };
-    """
-    self.parseAndAssertEqual(mojom_source, expected_source)
-
   def testMultipleEnableIfs(self):
     source = """
       enum Foo {
@@ -348,29 +228,6 @@ class ConditionalFeaturesTest(unittest.TestCase):
                       conditional_features.RemoveDisabledDefinitions,
                       definition, ENABLED_FEATURES)
 
-  def testMultipleEnableIfs(self):
-    source = """
-      enum Foo {
-        [EnableIf=red,EnableIfNot=yellow]
-        kBarValue = 5,
-      };
-    """
-    definition = parser.Parse(source, "my_file.mojom")
-    self.assertRaises(conditional_features.EnableIfError,
-                      conditional_features.RemoveDisabledDefinitions,
-                      definition, ENABLED_FEATURES)
-
-  def testMultipleEnableIfs(self):
-    source = """
-      enum Foo {
-        [EnableIfNot=red,EnableIfNot=yellow]
-        kBarValue = 5,
-      };
-    """
-    definition = parser.Parse(source, "my_file.mojom")
-    self.assertRaises(conditional_features.EnableIfError,
-                      conditional_features.RemoveDisabledDefinitions,
-                      definition, ENABLED_FEATURES)
 
 if __name__ == '__main__':
   unittest.main()

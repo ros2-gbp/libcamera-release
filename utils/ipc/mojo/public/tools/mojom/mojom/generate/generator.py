@@ -1,4 +1,4 @@
-# Copyright 2013 The Chromium Authors
+# Copyright 2013 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Code shared by the various language-specific code generators."""
@@ -97,7 +97,7 @@ def ToLowerSnakeCase(identifier):
   return _ToSnakeCase(identifier, upper=False)
 
 
-class Stylizer:
+class Stylizer(object):
   """Stylizers specify naming rules to map mojom names to names in generated
   code. For example, if you would like method_name in mojom to be mapped to
   MethodName in the generated code, you need to define a subclass of Stylizer
@@ -128,9 +128,6 @@ class Stylizer:
     return mojom_name
 
   def StylizeEnum(self, mojom_name):
-    return mojom_name
-
-  def StylizeFeature(self, mojom_name):
     return mojom_name
 
   def StylizeModule(self, mojom_namespace):
@@ -236,7 +233,7 @@ def AddComputedData(module):
     _AddInterfaceComputedData(interface)
 
 
-class Generator:
+class Generator(object):
   # Pass |output_dir| to emit files to disk. Omit |output_dir| to echo all
   # files to stdout.
   def __init__(self,
@@ -246,6 +243,7 @@ class Generator:
                variant=None,
                bytecode_path=None,
                for_blink=False,
+               js_bindings_mode="new",
                js_generate_struct_deserializers=False,
                export_attribute=None,
                export_header=None,
@@ -264,6 +262,7 @@ class Generator:
     self.variant = variant
     self.bytecode_path = bytecode_path
     self.for_blink = for_blink
+    self.js_bindings_mode = js_bindings_mode
     self.js_generate_struct_deserializers = js_generate_struct_deserializers
     self.export_attribute = export_attribute
     self.export_header = export_header
