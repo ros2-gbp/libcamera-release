@@ -206,18 +206,7 @@ class CommitFile:
 class Commit:
     def __init__(self, commit):
         self.commit = commit
-        self._trailers = []
         self._parse()
-
-    def _parse_trailers(self, lines):
-        for index in range(1, len(lines)):
-            line = lines[index]
-            if not line:
-                break
-
-            self._trailers.append(line)
-
-        return index
 
     def _parse(self):
         # Get the commit title and list of files.
@@ -228,7 +217,14 @@ class Commit:
 
         self._title = lines[0]
 
-        index = self._parse_trailers(lines)
+        self._trailers = []
+        for index in range(1, len(lines)):
+            line = lines[index]
+            if not line:
+                break
+
+            self._trailers.append(line)
+
         self._files = [CommitFile(f) for f in lines[index:] if f]
 
     def files(self, filter='AMR'):
@@ -270,21 +266,15 @@ class StagedChanges(Commit):
         return parse_diff(diff.splitlines(True))
 
 
-class Amendment(Commit):
+class Amendment(StagedChanges):
     def __init__(self):
-        Commit.__init__(self, '')
+        StagedChanges.__init__(self)
 
     def _parse(self):
-        # Create a title using HEAD commit and parse the trailers.
-        ret = subprocess.run(['git', 'show', '--format=%H %s%n%(trailers:only,unfold)',
-                             '--no-patch'],
+        # Create a title using HEAD commit
+        ret = subprocess.run(['git', 'show', '--pretty=oneline', '--no-patch'],
                              stdout=subprocess.PIPE).stdout.decode('utf-8')
-        lines = ret.splitlines()
-
-        self._title = 'Amendment of ' + lines[0].strip()
-
-        self._parse_trailers(lines)
-
+        self._title = 'Amendment of ' + ret.strip()
         # Extract the list of modified files
         ret = subprocess.run(['git', 'diff', '--staged', '--name-status', 'HEAD~'],
                              stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -489,8 +479,7 @@ class TrailersChecker(CommitChecker):
         for trailer in commit.trailers:
             match = TrailersChecker.trailer_regex.fullmatch(trailer)
             if not match:
-                issues.append(CommitIssue(f"Malformed commit trailer '{trailer}'"))
-                continue
+                raise RuntimeError(f"Malformed commit trailer '{trailer}'")
 
             key, value = match.groups()
 

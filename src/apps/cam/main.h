@@ -17,7 +17,6 @@ enum {
 	OptList = 'l',
 	OptListProperties = 'p',
 	OptMonitor = 'm',
-	OptOrientation = 'o',
 	OptSDL = 'S',
 	OptStream = 's',
 	OptListControls = 256,

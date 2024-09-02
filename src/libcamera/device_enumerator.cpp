@@ -101,14 +101,8 @@ bool DeviceMatch::match(const MediaDevice *device) const
 
 		for (const MediaEntity *entity : device->entities()) {
 			if (name == entity->name()) {
-				if (!entity->deviceNode().empty()) {
-					found = true;
-					break;
-				} else {
-					LOG(DeviceEnumerator, Debug)
-						<< "Skip " << entity->name()
-						<< ": no device node";
-				}
+				found = true;
+				break;
 			}
 		}
 

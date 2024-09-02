@@ -187,9 +187,9 @@ CameraConfiguration::Status IPU3CameraConfiguration::validate()
 	 * rotation and store the final combined transform that configure() will
 	 * need to apply to the sensor to save us working it out again.
 	 */
-	Orientation requestedOrientation = orientation;
-	combinedTransform_ = data_->cio2_.sensor()->computeTransform(&orientation);
-	if (orientation != requestedOrientation)
+	Transform requestedTransform = transform;
+	combinedTransform_ = data_->cio2_.sensor()->validateTransform(&transform);
+	if (transform != requestedTransform)
 		status = Adjusted;
 
 	/* Cap the number of entries to the available streams. */

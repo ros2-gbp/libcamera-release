@@ -3,23 +3,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Update mojo copy from a chromium source tree
 
-set -e
-
 if [ $# != 1 ] ; then
 	echo "Usage: $0 <chromium dir>"
 	exit 1
 fi
 
 ipc_dir="$(dirname "$(realpath "$0")")/ipc"
-chromium_dir="$(realpath "$1")"
-
-cd "${ipc_dir}/../../"
-
-# Reject dirty libcamera trees
-if [ -n "$(git status --porcelain -uno)" ] ; then
-	echo "libcamera tree is dirty"
-	exit 1
-fi
+chromium_dir="$1"
 
 if [ ! -d "${chromium_dir}/mojo" ] ; then
 	echo "Directory ${chromium_dir} doesn't contain mojo"
@@ -34,23 +24,19 @@ fi
 # Get the chromium commit id
 version=$(git -C "${chromium_dir}" rev-parse --short HEAD)
 
-# Reject dirty chromium trees
+# Reject dirty trees
 if [ -n "$(git -C "${chromium_dir}" status --porcelain)" ] ; then
 	echo "Chromium tree in ${chromium_dir} is dirty"
 	exit 1
 fi
 
-# Remove the previously imported files.
-rm -rf utils/ipc/mojo/
-rm -rf utils/ipc/tools/
-
 # Copy the diagnosis file
-mkdir -p utils/ipc/tools/diagnosis/
-cp "${chromium_dir}/tools/diagnosis/crbug_1001171.py" utils/ipc/tools/diagnosis/
+cp "${chromium_dir}/tools/diagnosis/crbug_1001171.py" "${ipc_dir}/tools/diagnosis"
 
 # Copy the rest of mojo
-mkdir -p utils/ipc/mojo/public/
-cp "${chromium_dir}/mojo/public/LICENSE" utils/ipc/mojo/public/
+cp "${chromium_dir}/mojo/public/LICENSE" "${ipc_dir}/mojo/public"
+
+rm -rf "${ipc_dir}/mojo/public/tools/*"
 
 (
 	cd "${chromium_dir}" || exit
@@ -69,22 +55,12 @@ modify them manually.
 EOF
 )
 
-echo "$readme" > utils/ipc/mojo/README
-echo "$readme" > utils/ipc/tools/README
+echo "$readme" > "${ipc_dir}/mojo/README"
+echo "$readme" > "${ipc_dir}/tools/README"
 
-# Commit the update. Use 'git commit -n' to avoid checkstyle pre-commit hook
-# failures, as mojo doesn't comply with the Python coding style enforced by
-# checkstyle.py.
-git add utils/ipc/mojo/
-git add utils/ipc/tools/
-
-echo "utils: ipc: Update mojo
-
-Update mojo from commit
-
-$(git -C "${chromium_dir}" show --pretty='%H "%s"' --no-patch)
-
-from the Chromium repository.
-
-The update-mojo.sh script was used for this update." | \
-git commit -n -s -F -
+cat <<EOF
+------------------------------------------------------------
+mojo updated. Please review and up-port local changes before
+committing.
+------------------------------------------------------------
+EOF

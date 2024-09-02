@@ -111,8 +111,8 @@ CameraConfiguration::Status UVCCameraConfiguration::validate()
 	if (config_.empty())
 		return Invalid;
 
-	if (orientation != Orientation::Rotate0) {
-		orientation = Orientation::Rotate0;
+	if (transform != Transform::Identity) {
+		transform = Transform::Identity;
 		status = Adjusted;
 	}
 

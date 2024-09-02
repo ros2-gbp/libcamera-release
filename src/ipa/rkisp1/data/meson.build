@@ -8,5 +8,4 @@ conf_files = files([
 ])
 
 install_data(conf_files,
-             install_dir : ipa_data_dir / 'rkisp1',
-             install_tag : 'runtime')
+             install_dir : ipa_data_dir / 'rkisp1')

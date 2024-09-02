@@ -49,8 +49,7 @@ if doxygen.found() and dot.found()
                   output : 'api-html',
                   command : [doxygen, doxyfile],
                   install : true,
-                  install_dir : doc_install_dir,
-                  install_tag : 'doc')
+                  install_dir : doc_install_dir)
 endif
 
 #
@@ -64,8 +63,6 @@ endif
 
 if sphinx.found()
     docs_sources = [
-        'camera-sensor-model.rst',
-        'code-of-conduct.rst',
         'coding-style.rst',
         'conf.py',
         'contributing.rst',
@@ -92,8 +89,7 @@ if sphinx.found()
                   output : 'html',
                   build_by_default : true,
                   install : true,
-                  install_dir : doc_install_dir,
-                  install_tag : 'doc')
+                  install_dir : doc_install_dir)
 
     custom_target('documentation-linkcheck',
                   command : [sphinx, '-W', '-b', 'linkcheck', meson.current_source_dir(), '@OUTPUT@'],
