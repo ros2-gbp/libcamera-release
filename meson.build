@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: CC0-1.0
 
 project('libcamera', 'c', 'cpp',
-    meson_version : '>= 0.57',
-    version : '0.1.0',
+    meson_version : '>= 0.63',
+    version : '0.3.1',
     default_options : [
         'werror=true',
         'warning_level=2',
@@ -74,6 +74,10 @@ cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 config_h = configuration_data()
 
+if cc.has_header_symbol('fcntl.h', 'F_ADD_SEALS', prefix : '#define _GNU_SOURCE')
+    config_h.set('HAVE_FILE_SEALS', 1)
+endif
+
 if cc.has_header_symbol('unistd.h', 'issetugid')
     config_h.set('HAVE_ISSETUGID', 1)
 endif
@@ -82,11 +86,25 @@ if cc.has_header_symbol('locale.h', 'locale_t', prefix : '#define _GNU_SOURCE')
     config_h.set('HAVE_LOCALE_T', 1)
 endif
 
+if cc.has_header_symbol('sys/mman.h', 'memfd_create', prefix : '#define _GNU_SOURCE')
+    config_h.set('HAVE_MEMFD_CREATE', 1)
+endif
+
+ioctl_posix_test = '''
+#include <sys/ioctl.h>
+int ioctl (int, int, ...);
+'''
+
+if cc.compiles(ioctl_posix_test)
+    config_h.set('HAVE_POSIX_IOCTL', 1)
+endif
+
 if cc.has_header_symbol('stdlib.h', 'secure_getenv', prefix : '#define _GNU_SOURCE')
     config_h.set('HAVE_SECURE_GETENV', 1)
 endif
 
 common_arguments = [
+    '-Wmissing-declarations',
     '-Wshadow',
     '-include', meson.current_build_dir() / 'config.h',
 ]
@@ -99,17 +117,23 @@ if cc.get_id() == 'clang'
         error('clang version is too old, libcamera requires 9.0 or newer')
     endif
 
-    # Turn _FORTIFY_SOURCE by default on optimised builds (as it requires -O1
-    # or higher). This is needed on clang only as gcc enables it by default.
+    # Turn _FORTIFY_SOURCE by default on. This is needed on clang only as gcc
+    # enables it by default. FORTIFY will not work properly with `-O0`, and may
+    # result in macro redefinition errors if the user already has a setting for
+    # `-D_FORTIFY_SOURCE`. Do not enable FORTIFY in either of those cases.
     if get_option('optimization') != '0'
-        common_arguments += [
-            '-D_FORTIFY_SOURCE=2',
-        ]
+        fortify = cc.get_define('_FORTIFY_SOURCE')
+        if fortify == ''
+            message('Adding _FORTIFY_SOURCE')
+            common_arguments += [
+                '-D_FORTIFY_SOURCE=2',
+            ]
+        endif
     endif
 
     # Use libc++ by default if available instead of libstdc++ when compiling
     # with clang.
-    if cc.find_library('libc++', required : false).found()
+    if cc.find_library('c++', required : false).found()
         cpp_arguments += [
             '-stdlib=libc++',
         ]
@@ -192,6 +216,7 @@ arch_x86 = ['x86', 'x86_64']
 pipelines_support = {
     'imx8-isi':     arch_arm,
     'ipu3':         arch_x86,
+    'mali-c55':     arch_arm,
     'rkisp1':       arch_arm,
     'rpi/vc4':      arch_arm,
     'simple':       arch_arm,
@@ -261,6 +286,8 @@ py_mod.find_installation('python3', modules : py_modules)
 summary({
             'Enabled pipelines': pipelines,
             'Enabled IPA modules': enabled_ipa_names,
+            'Controls files': controls_files,
+            'Properties files': properties_files,
             'Hotplug support': libudev.found(),
             'Tracing support': tracing_enabled,
             'Android support': android_enabled,

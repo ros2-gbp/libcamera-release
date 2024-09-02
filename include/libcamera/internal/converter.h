@@ -3,7 +3,7 @@
  * Copyright (C) 2020, Laurent Pinchart
  * Copyright 2022 NXP
  *
- * converter.h - Generic format converter interface
+ * Generic format converter interface
  */
 
 #pragma once
@@ -26,6 +26,7 @@ namespace libcamera {
 class FrameBuffer;
 class MediaDevice;
 class PixelFormat;
+class Stream;
 struct StreamConfiguration;
 
 class Converter
@@ -46,14 +47,14 @@ public:
 
 	virtual int configure(const StreamConfiguration &inputCfg,
 			      const std::vector<std::reference_wrapper<StreamConfiguration>> &outputCfgs) = 0;
-	virtual int exportBuffers(unsigned int output, unsigned int count,
+	virtual int exportBuffers(const Stream *stream, unsigned int count,
 				  std::vector<std::unique_ptr<FrameBuffer>> *buffers) = 0;
 
 	virtual int start() = 0;
 	virtual void stop() = 0;
 
 	virtual int queueBuffers(FrameBuffer *input,
-				 const std::map<unsigned int, FrameBuffer *> &outputs) = 0;
+				 const std::map<const Stream *, FrameBuffer *> &outputs) = 0;
 
 	Signal<FrameBuffer *> inputBufferReady;
 	Signal<FrameBuffer *> outputBufferReady;

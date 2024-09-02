@@ -2,7 +2,7 @@
 /*
  * Copyright 2022 NXP
  *
- * converter.cpp - Generic format converter interface
+ * Generic format converter interface
  */
 
 #include "libcamera/internal/converter.h"
@@ -12,8 +12,6 @@
 #include <libcamera/base/log.h>
 
 #include "libcamera/internal/media_device.h"
-
-#include "linux/media.h"
 
 /**
  * \file internal/converter.h
@@ -113,12 +111,12 @@ Converter::~Converter()
 /**
  * \fn Converter::exportBuffers()
  * \brief Export buffers from the converter device
- * \param[in] output Output stream index exporting the buffers
+ * \param[in] stream Output stream pointer exporting the buffers
  * \param[in] count Number of buffers to allocate
  * \param[out] buffers Vector to store allocated buffers
  *
  * This function operates similarly to V4L2VideoDevice::exportBuffers() on the
- * output stream indicated by the \a output index.
+ * output stream indicated by the \a output.
  *
  * \return The number of allocated buffers on success or a negative error code
  * otherwise
@@ -139,7 +137,7 @@ Converter::~Converter()
  * \fn Converter::queueBuffers()
  * \brief Queue buffers to converter device
  * \param[in] input The frame buffer to apply the conversion
- * \param[out] outputs The container holding the output stream indexes and
+ * \param[out] outputs The container holding the output stream pointers and
  * their respective frame buffer outputs.
  *
  * This function queues the \a input frame buffer on the output streams of the
@@ -199,16 +197,18 @@ ConverterFactoryBase::ConverterFactoryBase(const std::string name, std::initiali
 
 /**
  * \fn ConverterFactoryBase::compatibles()
- * \return The names compatibles
+ * \return The list of compatible name aliases of the converter
  */
 
 /**
- * \brief Create an instance of the converter corresponding to a named factory
- * \param[in] media Name of the factory
+ * \brief Create an instance of the converter corresponding to the media device
+ * \param[in] media The media device to create the converter for
  *
- * \return A unique pointer to a new instance of the converter subclass
- * corresponding to the named factory or one of its alias. Otherwise a null
- * pointer if no such factory exists
+ * The converter is created by matching the factory name or any of its
+ * compatible aliases with the media device driver name.
+ *
+ * \return A new instance of the converter subclass corresponding to the media
+ * device, or null if the media device driver name doesn't match anything
  */
 std::unique_ptr<Converter> ConverterFactoryBase::create(MediaDevice *media)
 {
@@ -236,10 +236,11 @@ std::unique_ptr<Converter> ConverterFactoryBase::create(MediaDevice *media)
 }
 
 /**
- * \brief Add a converter class to the registry
+ * \brief Add a converter factory to the registry
  * \param[in] factory Factory to use to construct the converter class
  *
- * The caller is responsible to guarantee the uniqueness of the converter name.
+ * The caller is responsible to guarantee the uniqueness of the converter
+ * factory name.
  */
 void ConverterFactoryBase::registerType(ConverterFactoryBase *factory)
 {
