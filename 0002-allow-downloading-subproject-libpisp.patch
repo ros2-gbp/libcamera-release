@@ -1,0 +1,25 @@
+From b66fe68c9450ac19257b4ed2e3f68448dbac03d0 Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Tue, 8 Apr 2025 23:04:12 +0200
+Subject: [PATCH 2/2] allow downloading subproject "libpisp"
+
+---
+ debian/rules.em | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index 6c7d27e..c839a96 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -29,6 +29,8 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+ override_dh_auto_configure:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+ 	dh_auto_configure -- \
++		--wrap-mode=forcefallback \
++		--force-fallback-for=libpisp \
+ 		--prefix="@(InstallationPrefix)" \
+ 		--cmake-prefix-path="@(InstallationPrefix)" \
+ 		--libdir=lib \
+-- 
+2.43.0
+
