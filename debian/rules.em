@@ -29,6 +29,8 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 override_dh_auto_configure:
 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
 	dh_auto_configure -- \
+		--wrap-mode=forcefallback \
+		--force-fallback-for=libpisp \
 		--prefix="@(InstallationPrefix)" \
 		--cmake-prefix-path="@(InstallationPrefix)" \
 		--libdir=lib \
