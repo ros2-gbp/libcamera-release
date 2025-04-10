@@ -34,7 +34,8 @@ override_dh_auto_configure:
 		--prefix="@(InstallationPrefix)" \
 		--cmake-prefix-path="@(InstallationPrefix)" \
 		--libdir=lib \
-		--libexecdir=lib
+		--libexecdir=lib \
+		-Dcpp_args="-Wno-error=unused-parameter"
 
 override_dh_auto_build:
 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
