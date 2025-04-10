@@ -1,0 +1,26 @@
+From e0f009ffc36d7982689a52966834a9ed5636f1d0 Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Thu, 10 Apr 2025 19:24:38 +0200
+Subject: [PATCH 3/3] ignore unused parameters in subproject "libpisp"
+
+---
+ debian/rules.em | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index c839a96..90a6fd9 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -34,7 +34,8 @@ override_dh_auto_configure:
+ 		--prefix="@(InstallationPrefix)" \
+ 		--cmake-prefix-path="@(InstallationPrefix)" \
+ 		--libdir=lib \
+-		--libexecdir=lib
++		--libexecdir=lib \
++		-Dcpp_args="-Wno-error=unused-parameter"
+ 
+ override_dh_auto_build:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+-- 
+2.43.0
+
