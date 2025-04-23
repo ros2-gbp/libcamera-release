@@ -1,4 +1,4 @@
-From b7c3585116f22bac2b85613204ea6bb86be4d3a4 Mon Sep 17 00:00:00 2001
+From 6b6b10fd4dda871262a4ba09499f6d345213939e Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 8 Apr 2025 23:04:12 +0200
 Subject: [PATCH 2/3] allow downloading subproject "libpisp"
@@ -8,7 +8,7 @@ Subject: [PATCH 2/3] allow downloading subproject "libpisp"
  1 file changed, 2 insertions(+)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index 6c7d27e..c839a96 100755
+index 6c7d27e0fcd2..c839a96fe7be 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -29,6 +29,8 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -21,5 +21,5 @@ index 6c7d27e..c839a96 100755
  		--cmake-prefix-path="@(InstallationPrefix)" \
  		--libdir=lib \
 -- 
-2.43.0
+2.49.0
 

@@ -1,4 +1,4 @@
-From 69bd6c519c4045dc9e8409767bad05d736448ab2 Mon Sep 17 00:00:00 2001
+From 30fac4df73549c7fa526ba2e5c69f09960c37196 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 10 Apr 2025 19:24:38 +0200
 Subject: [PATCH 3/3] ignore unused parameters in subproject "libpisp"
@@ -8,7 +8,7 @@ Subject: [PATCH 3/3] ignore unused parameters in subproject "libpisp"
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index c839a96..90a6fd9 100755
+index c839a96fe7be..90a6fd9e65a5 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -34,7 +34,8 @@ override_dh_auto_configure:
@@ -22,5 +22,5 @@ index c839a96..90a6fd9 100755
  override_dh_auto_build:
  	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
 -- 
-2.43.0
+2.49.0
 
