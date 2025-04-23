@@ -1,4 +1,4 @@
-From 30fac4df73549c7fa526ba2e5c69f09960c37196 Mon Sep 17 00:00:00 2001
+From 9f84adc2c373278c80d5e711011851842f6d0d53 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 10 Apr 2025 19:24:38 +0200
 Subject: [PATCH 3/3] ignore unused parameters in subproject "libpisp"
