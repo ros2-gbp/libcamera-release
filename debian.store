@@ -1,1 +1,1 @@
-{"base": "2fded31", "parent": "debian/rolling/libcamera", "previous": "30fac4d", "trim": "", "trimbase": ""}
+{"base": "0bd6304e1a7f", "parent": "debian/kilted/libcamera", "previous": "5bb823455a5b", "trim": "", "trimbase": ""}
