@@ -1,0 +1,27 @@
+From bd67255b5145b572adb0b81e64d340a77dc3fafc Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Sat, 9 Aug 2025 20:06:47 +0200
+Subject: [PATCH 4/4] Revert "ignore unused parameters in subproject "libpisp""
+
+This reverts commit 78efc84268a28b3f8e907315be58049f2268f485.
+---
+ debian/rules.em | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index 90a6fd9..c839a96 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -34,8 +34,7 @@ override_dh_auto_configure:
+ 		--prefix="@(InstallationPrefix)" \
+ 		--cmake-prefix-path="@(InstallationPrefix)" \
+ 		--libdir=lib \
+-		--libexecdir=lib \
+-		-Dcpp_args="-Wno-error=unused-parameter"
++		--libexecdir=lib
+ 
+ override_dh_auto_build:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+-- 
+2.43.0
+

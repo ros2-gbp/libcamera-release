@@ -1,7 +1,7 @@
-From 9044f6c9ae322228332537ca2c634997df27cd7f Mon Sep 17 00:00:00 2001
+From 78efc84268a28b3f8e907315be58049f2268f485 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 10 Apr 2025 19:24:38 +0200
-Subject: [PATCH 3/3] ignore unused parameters in subproject "libpisp"
+Subject: [PATCH 3/4] ignore unused parameters in subproject "libpisp"
 
 ---
  debian/rules.em | 3 ++-
