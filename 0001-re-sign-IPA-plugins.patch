@@ -1,4 +1,4 @@
-From a52e91dce9a2b74942af2a8616f18e52e7ffaebf Mon Sep 17 00:00:00 2001
+From 8ec8c8a31b37b758e9802c4f81a0e7ec48f225fc Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Thu, 23 May 2024 21:09:22 +0200
 Subject: [PATCH] re-sign IPA plugins
