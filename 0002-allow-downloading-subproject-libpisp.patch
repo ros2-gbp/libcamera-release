@@ -1,7 +1,7 @@
-From bd5dc693b7f5f0ca8c3462bc5046609db5ad2386 Mon Sep 17 00:00:00 2001
+From 6007d13446ed5a86d7f5766216c29d59fce184c8 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 8 Apr 2025 23:04:12 +0200
-Subject: [PATCH 2/3] allow downloading subproject "libpisp"
+Subject: [PATCH 2/4] allow downloading subproject "libpisp"
 
 ---
  debian/rules.em | 2 ++
