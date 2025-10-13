@@ -33,6 +33,7 @@
   <depend>yaml</depend>
   <depend>libssl-dev</depend>
   <depend>libudev-dev</depend>
+  <depend>libyuv-dev</depend>
   <depend>python3</depend>
 
   <!-- workaround for https://bugs.libcamera.org/show_bug.cgi?id=189 -->
