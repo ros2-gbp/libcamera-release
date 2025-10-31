@@ -1,7 +1,7 @@
-From a036f46d1a07ed2579bd8f89fef17ac53a96daff Mon Sep 17 00:00:00 2001
+From 8515b41d10378be8d8b4ee6e0c1699948dff0f83 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 21 May 2024 21:47:34 +0200
-Subject: [PATCH 1/4] resign IPA plugins
+Subject: [PATCH 1/6] resign IPA plugins
 
 ---
  debian/rules.em | 6 ++++++

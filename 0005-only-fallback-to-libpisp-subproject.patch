@@ -1,0 +1,24 @@
+From e6f91879ed38ebe16741437c72f51b91ded3233f Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Fri, 10 Oct 2025 22:31:27 +0200
+Subject: [PATCH 5/6] only fallback to 'libpisp' subproject
+
+---
+ debian/rules.em | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index c839a96..cd99f4b 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -29,7 +29,6 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+ override_dh_auto_configure:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+ 	dh_auto_configure -- \
+-		--wrap-mode=forcefallback \
+ 		--force-fallback-for=libpisp \
+ 		--prefix="@(InstallationPrefix)" \
+ 		--cmake-prefix-path="@(InstallationPrefix)" \
+-- 
+2.43.0
+

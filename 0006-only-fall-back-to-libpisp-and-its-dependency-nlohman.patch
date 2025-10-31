@@ -1,0 +1,27 @@
+From d2799b1900439bb8b94127a41d5d6c35d114a1d1 Mon Sep 17 00:00:00 2001
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Mon, 13 Oct 2025 21:19:51 +0200
+Subject: [PATCH 6/6] only fall back to 'libpisp' and its dependency
+ 'nlohmann_json'
+
+---
+ debian/rules.em | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/debian/rules.em b/debian/rules.em
+index cd99f4b..3c54091 100755
+--- a/debian/rules.em
++++ b/debian/rules.em
+@@ -29,7 +29,8 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+ override_dh_auto_configure:
+ 	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
+ 	dh_auto_configure -- \
+-		--force-fallback-for=libpisp \
++		--wrap-mode=nofallback \
++		--force-fallback-for=libpisp,nlohmann_json \
+ 		--prefix="@(InstallationPrefix)" \
+ 		--cmake-prefix-path="@(InstallationPrefix)" \
+ 		--libdir=lib \
+-- 
+2.43.0
+
