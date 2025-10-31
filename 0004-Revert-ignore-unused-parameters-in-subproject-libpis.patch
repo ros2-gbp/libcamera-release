@@ -1,4 +1,4 @@
-From 08e00b4c88303e1c4f0cc9944efb9120480659a6 Mon Sep 17 00:00:00 2001
+From adaf04fc9da62c94f2c4668e9bb5fd6d3f357ef2 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Wed, 13 Aug 2025 19:26:08 +0200
 Subject: [PATCH 4/6] Revert "ignore unused parameters in subproject "libpisp""
