@@ -117,6 +117,8 @@ protected:
 
 	int queueRequestDevice(Camera *camera, Request *request) override;
 
+	bool acquireDevice(Camera *camera) override;
+
 private:
 	static constexpr Size kPreviewSize = { 1920, 1080 };
 	static constexpr Size kMinISISize = { 1, 1 };
@@ -139,10 +141,12 @@ private:
 
 	void bufferReady(FrameBuffer *buffer);
 
-	MediaDevice *isiDev_;
+	std::shared_ptr<MediaDevice> isiDev_;
 
 	std::unique_ptr<V4L2Subdevice> crossbar_;
 	std::vector<Pipe> pipes_;
+
+	V4L2Subdevice::Routing routing_ = {};
 };
 
 /* -----------------------------------------------------------------------------
@@ -950,6 +954,19 @@ int PipelineHandlerISI::queueRequestDevice(Camera *camera, Request *request)
 	return 0;
 }
 
+bool PipelineHandlerISI::acquireDevice([[maybe_unused]] Camera *camera)
+{
+	if (useCount() > 0)
+		return true;
+
+	/* Enable routing for all available sensors once */
+	int ret = crossbar_->setRouting(&routing_, V4L2Subdevice::ActiveFormat);
+	if (ret)
+		return false;
+
+	return true;
+}
+
 bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 {
 	DeviceMatch dm("mxc-isi");
@@ -979,7 +996,7 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 	 * Acquire the subdevs and video nodes for the crossbar switch and the
 	 * processing pipelines.
 	 */
-	crossbar_ = V4L2Subdevice::fromEntityName(isiDev_, "crossbar");
+	crossbar_ = V4L2Subdevice::fromEntityName(isiDev_.get(), "crossbar");
 	if (!crossbar_)
 		return false;
 
@@ -990,7 +1007,7 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 	for (unsigned int i = 0; ; ++i) {
 		std::string entityName = "mxc_isi." + std::to_string(i);
 		std::unique_ptr<V4L2Subdevice> isi =
-			V4L2Subdevice::fromEntityName(isiDev_, entityName);
+			V4L2Subdevice::fromEntityName(isiDev_.get(), entityName);
 		if (!isi)
 			break;
 
@@ -1000,7 +1017,7 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 
 		entityName += ".capture";
 		std::unique_ptr<V4L2VideoDevice> capture =
-			V4L2VideoDevice::fromEntityName(isiDev_, entityName);
+			V4L2VideoDevice::fromEntityName(isiDev_.get(), entityName);
 		if (!capture)
 			return false;
 
@@ -1034,12 +1051,11 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 	unsigned int numSinks = 0;
 	const unsigned int xbarFirstSource = crossbar_->entity()->pads().size() - pipes_.size();
 	const unsigned int maxStreams = pipes_.size() / cameraCount;
-	V4L2Subdevice::Routing routing = {};
 
 	for (MediaPad *pad : crossbar_->entity()->pads()) {
 		unsigned int sink = numSinks;
 
-		if (!(pad->flags() & MEDIA_PAD_FL_SINK) || pad->links().empty())
+		if (!(pad->flags() & MEDIA_PAD_FL_SINK))
 			continue;
 
 		/*
@@ -1047,6 +1063,9 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 		 * routing and format for this camera.
 		 */
 		numSinks++;
+
+		if (pad->links().empty())
+			continue;
 
 		MediaEntity *csi = pad->links()[0]->source()->entity();
 		if (csi->pads().size() != 2) {
@@ -1082,6 +1101,7 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 		LOG(ISI, Debug)
 			<< "cam" << numCameras
 			<< " streams " << data->streams_.size()
+			<< " sink " << data->xbarSink_
 			<< " offset " << data->xbarSourceOffset_;
 
 		ret = data->init();
@@ -1100,7 +1120,7 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 		/*  Add routes to the crossbar switch routing table. */
 		for (unsigned i = 0; i < data->streams_.size(); i++) {
 			unsigned int sourcePad = xbarFirstSource + data->xbarSourceOffset_ + i;
-			routing.emplace_back(V4L2Subdevice::Stream{ data->xbarSink_, 0 },
+			routing_.emplace_back(V4L2Subdevice::Stream{ data->xbarSink_, 0 },
 					     V4L2Subdevice::Stream{ sourcePad, 0 },
 					     V4L2_SUBDEV_ROUTE_FL_ACTIVE);
 		}
@@ -1111,10 +1131,6 @@ bool PipelineHandlerISI::match(DeviceEnumerator *enumerator)
 		registerCamera(std::move(camera));
 		numCameras++;
 	}
-
-	ret = crossbar_->setRouting(&routing, V4L2Subdevice::ActiveFormat);
-	if (ret)
-		return false;
 
 	return numCameras > 0;
 }
