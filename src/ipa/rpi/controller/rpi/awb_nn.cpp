@@ -35,6 +35,8 @@ using namespace libcamera;
 
 LOG_DECLARE_CATEGORY(RPiAwb)
 
+constexpr double kDefaultCT = 4500.0;
+
 /*
  * The neural networks are trained to work on images rendered at a canonical
  * colour temperature. That value is 5000K, which must be reproduced here.
@@ -47,7 +49,7 @@ namespace RPiController {
 
 struct AwbNNConfig {
 	AwbNNConfig() = default;
-	int read(const libcamera::ValueNode &params, AwbConfig &config);
+	int read(const libcamera::YamlObject &params, AwbConfig &config);
 
 	/* An empty model will check default locations for model.tflite */
 	std::string model;
@@ -67,7 +69,7 @@ public:
 	~AwbNN();
 	char const *name() const override;
 	void initialise() override;
-	int read(const libcamera::ValueNode &params) override;
+	int read(const libcamera::YamlObject &params) override;
 
 protected:
 	void doAwb() override;
@@ -86,7 +88,7 @@ private:
 	std::unique_ptr<tflite::Interpreter> interpreter_;
 };
 
-int AwbNNConfig::read(const libcamera::ValueNode &params, AwbConfig &config)
+int AwbNNConfig::read(const libcamera::YamlObject &params, AwbConfig &config)
 {
 	model = params["model"].get<std::string>("");
 	minTemp = params["min_temp"].get<float>(2800.0);
@@ -146,7 +148,7 @@ char const *AwbNN::name() const
 	return NAME;
 }
 
-int AwbNN::read(const libcamera::ValueNode &params)
+int AwbNN::read(const libcamera::YamlObject &params)
 {
 	int ret;
 

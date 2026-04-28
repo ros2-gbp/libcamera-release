@@ -18,13 +18,11 @@
 namespace libcamera {
 
 struct DebayerParams {
-	Matrix<float, 3, 3> combinedMatrix = { { 1.0, 0.0, 0.0,
-						 0.0, 1.0, 0.0,
-						 0.0, 0.0, 1.0 } };
-	RGB<float> blackLevel = RGB<float>({ 0.0, 0.0, 0.0 });
-	float gamma = 1.0;
-	float contrastExp = 1.0;
-	RGB<float> gains = RGB<float>({ 1.0, 1.0, 1.0 });
+	Matrix<float, 3, 3> combinedMatrix;
+	RGB<float> blackLevel;
+	float gamma;
+	float contrastExp;
+	RGB<float> gains;
 };
 
 } /* namespace libcamera */

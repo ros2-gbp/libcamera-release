@@ -252,7 +252,12 @@ void GstCameraControls::setCamera(const std::shared_ptr<libcamera::Camera> &cam)
 	 * the pipeline has started and thus before the camera was known.
 	 */
 	ControlList new_controls;
-	for (const auto &[id, value] : controls_acc_) {
+	for (auto control = controls_acc_.begin();
+	     control != controls_acc_.end();
+	     ++control) {
+		unsigned int id = control->first;
+		ControlValue value = control->second;
+
 		const ControlId *cid = capabilities_.idmap().at(id);
 		auto info = capabilities_.find(cid);
 

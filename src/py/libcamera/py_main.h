@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
-
 #include <libcamera/base/log.h>
+
+#include <pybind11/pybind11.h>
 
 namespace libcamera {
 

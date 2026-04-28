@@ -589,7 +589,7 @@ bool MediaDevice::addObject(MediaObject *object)
  */
 void MediaDevice::clear()
 {
-	for (const auto &o : objects_)
+	for (auto const &o : objects_)
 		delete o.second;
 
 	objects_.clear();

@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 	sa.sa_handler = &signalHandler;
 	sigaction(SIGINT, &sa, nullptr);
 
-	std::unique_ptr<CameraManager> cm = std::make_unique<CameraManager>();
+	CameraManager *cm = new libcamera::CameraManager();
 
 	ret = cm->start();
 	if (ret) {
@@ -82,12 +82,13 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	MainWindow *mainWindow = new MainWindow(cm.get(), options);
+	MainWindow *mainWindow = new MainWindow(cm, options);
 	mainWindow->show();
 	ret = app.exec();
 	delete mainWindow;
 
 	cm->stop();
+	delete cm;
 
 	return ret;
 }

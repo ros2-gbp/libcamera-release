@@ -12,7 +12,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <vector>
 
 #include <libcamera/base/signal.h>
 
@@ -20,6 +19,7 @@
 
 #include "libcamera/internal/bayer_format.h"
 #include "libcamera/internal/framebuffer.h"
+#include "libcamera/internal/global_configuration.h"
 #include "libcamera/internal/shared_mem_object.h"
 #include "libcamera/internal/software_isp/swisp_stats.h"
 
@@ -27,15 +27,14 @@
 
 namespace libcamera {
 
-class CameraManager;
-class MappedFrameBuffer;
 class PixelFormat;
+class MappedFrameBuffer;
 struct StreamConfiguration;
 
 class SwStatsCpu
 {
 public:
-	SwStatsCpu(const CameraManager &cm);
+	SwStatsCpu(const GlobalConfiguration &configuration);
 	~SwStatsCpu() = default;
 
 	/*
@@ -52,13 +51,13 @@ public:
 
 	const Size &patternSize() { return patternSize_; }
 
-	int configure(const StreamConfiguration &inputCfg, unsigned int statsBufferCount = 1);
+	int configure(const StreamConfiguration &inputCfg);
 	void setWindow(const Rectangle &window);
 	void startFrame(uint32_t frame);
 	void finishFrame(uint32_t frame, uint32_t bufferId);
 	void processFrame(uint32_t frame, uint32_t bufferId, FrameBuffer *input);
 
-	void processLine0(uint32_t frame, unsigned int y, const uint8_t *src[], unsigned int statsBufferIndex = 0)
+	void processLine0(uint32_t frame, unsigned int y, const uint8_t *src[])
 	{
 		if (frame % kStatPerNumFrames)
 			return;
@@ -67,10 +66,10 @@ public:
 		    y >= (window_.y + window_.height))
 			return;
 
-		(this->*stats0_)(src, stats_[statsBufferIndex]);
+		(this->*stats0_)(src);
 	}
 
-	void processLine2(uint32_t frame, unsigned int y, const uint8_t *src[], unsigned int statsBufferIndex = 0)
+	void processLine2(uint32_t frame, unsigned int y, const uint8_t *src[])
 	{
 		if (frame % kStatPerNumFrames)
 			return;
@@ -79,25 +78,25 @@ public:
 		    y >= (window_.y + window_.height))
 			return;
 
-		(this->*stats2_)(src, stats_[statsBufferIndex]);
+		(this->*stats2_)(src);
 	}
 
 	Signal<uint32_t, uint32_t> statsReady;
 
 private:
-	using statsProcessFn = void (SwStatsCpu::*)(const uint8_t *src[], SwIspStats &stats);
+	using statsProcessFn = void (SwStatsCpu::*)(const uint8_t *src[]);
 	using processFrameFn = void (SwStatsCpu::*)(MappedFrameBuffer &in);
 
 	int setupStandardBayerOrder(BayerFormat::Order order);
 	/* Bayer 8 bpp unpacked */
-	void statsBGGR8Line0(const uint8_t *src[], SwIspStats &stats);
+	void statsBGGR8Line0(const uint8_t *src[]);
 	/* Bayer 10 bpp unpacked */
-	void statsBGGR10Line0(const uint8_t *src[], SwIspStats &stats);
+	void statsBGGR10Line0(const uint8_t *src[]);
 	/* Bayer 12 bpp unpacked */
-	void statsBGGR12Line0(const uint8_t *src[], SwIspStats &stats);
+	void statsBGGR12Line0(const uint8_t *src[]);
 	/* Bayer 10 bpp packed */
-	void statsBGGR10PLine0(const uint8_t *src[], SwIspStats &stats);
-	void statsGBRG10PLine0(const uint8_t *src[], SwIspStats &stats);
+	void statsBGGR10PLine0(const uint8_t *src[]);
+	void statsGBRG10PLine0(const uint8_t *src[]);
 
 	void processBayerFrame2(MappedFrameBuffer &in);
 
@@ -117,8 +116,8 @@ private:
 	unsigned int xShift_;
 	unsigned int stride_;
 
-	std::vector<SwIspStats> stats_;
 	SharedMemObject<SwIspStats> sharedStats_;
+	SwIspStats stats_;
 	Benchmark bench_;
 };
 

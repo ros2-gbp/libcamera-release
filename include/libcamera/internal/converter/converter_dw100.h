@@ -31,10 +31,10 @@ public:
 
 	static std::unique_ptr<ConverterDW100Module> createModule(DeviceEnumerator *enumerator);
 
-	int init(const ValueNode &params);
+	int init(const YamlObject &params);
 
 	int configure(const StreamConfiguration &inputCfg,
-		      const std::vector<std::reference_wrapper<const StreamConfiguration>>
+		      const std::vector<std::reference_wrapper<StreamConfiguration>>
 			      &outputCfg);
 	bool isConfigured(const Stream *stream) const;
 

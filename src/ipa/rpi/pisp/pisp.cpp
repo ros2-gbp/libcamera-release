@@ -80,30 +80,36 @@ int generateLut(const ipa::Pwl &pwl, uint32_t *lut, std::size_t lutSize,
 	if (pwl.empty())
 		return -EINVAL;
 
-	int nextY = pwl.eval(0);
+	int lastY = 0;
 	for (unsigned int i = 0; i < lutSize; i++) {
-		unsigned int nextI = i + 1;
-
-		int nextX;
-		if (nextI < 32)
-			nextX = nextI * 512;
-		else if (nextI < 48)
-			nextX = (nextI - 32) * 1024 + 16384;
+		int x, y;
+		if (i < 32)
+			x = i * 512;
+		else if (i < 48)
+			x = (i - 32) * 1024 + 16384;
 		else
-			nextX = (nextI - 48) * 2048 + 32768;
+			x = std::min(65535u, (i - 48) * 2048 + 32768);
 
-		int y = nextY;
-		nextY = pwl.eval(nextX);
-
-		unsigned int slope = nextY - y;
-		if (slope >= (1u << SlopeBits)) {
-			slope = (1u << SlopeBits) - 1;
-			LOG(IPARPI, Info)
-				<< "Maximum Gamma slope exceeded, adjusting!";
-			nextY = y + slope;
+		y = pwl.eval(x);
+		if (y < 0 || (i && y < lastY)) {
+			LOG(IPARPI, Error)
+				<< "Malformed PWL for Gamma, disabling!";
+			return -1;
 		}
 
-		lut[i] = y | (slope << PosBits);
+		if (i) {
+			unsigned int slope = y - lastY;
+			if (slope >= (1u << SlopeBits)) {
+				slope = (1u << SlopeBits) - 1;
+				LOG(IPARPI, Info)
+					<< ("Maximum Gamma slope exceeded, adjusting!");
+				y = lastY + slope;
+			}
+			lut[i - 1] |= slope << PosBits;
+		}
+
+		lut[i] = y;
+		lastY = y;
 	}
 
 	return 0;
@@ -547,7 +553,7 @@ RPiController::StatisticsPtr IpaPiSP::platformProcessStats(Span<uint8_t> mem)
 
 void IpaPiSP::handleControls(const ControlList &controls)
 {
-	for (const auto &ctrl : controls) {
+	for (auto const &ctrl : controls) {
 		switch (ctrl.first) {
 		case controls::HDR_MODE:
 		case controls::AE_METERING_MODE:

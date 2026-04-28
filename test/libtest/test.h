@@ -10,8 +10,6 @@
 #include <sstream>
 #include <string>
 
-#include <libcamera/base/unique_fd.h>
-
 enum TestStatus {
 	TestPass = 0,
 	TestFail = -1,
@@ -44,10 +42,4 @@ int main(int argc, char *argv[])					\
 	Klass klass;							\
 	klass.setArgs(argc, argv);					\
 	return klass.execute();						\
-}
-
-namespace test {
-
-[[nodiscard]] libcamera::UniqueFD createTemporaryFile();
-
 }

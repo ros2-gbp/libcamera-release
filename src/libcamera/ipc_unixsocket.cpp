@@ -70,7 +70,7 @@ LOG_DEFINE_CATEGORY(IPCUnixSocket)
  */
 
 IPCUnixSocket::IPCUnixSocket()
-	: headerReceived_(false)
+	: headerReceived_(false), notifier_(nullptr)
 {
 }
 
@@ -130,7 +130,7 @@ int IPCUnixSocket::bind(UniqueFD fd)
 		return -EINVAL;
 
 	fd_ = std::move(fd);
-	notifier_ = std::make_unique<EventNotifier>(fd_.get(), EventNotifier::Read);
+	notifier_ = new EventNotifier(fd_.get(), EventNotifier::Read);
 	notifier_->activated.connect(this, &IPCUnixSocket::dataNotifier);
 
 	return 0;
@@ -146,7 +146,8 @@ void IPCUnixSocket::close()
 	if (!isBound())
 		return;
 
-	notifier_.reset();
+	delete notifier_;
+	notifier_ = nullptr;
 
 	fd_.reset();
 	headerReceived_ = false;

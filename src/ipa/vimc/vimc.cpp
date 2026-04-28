@@ -33,7 +33,6 @@ public:
 	~IPAVimc();
 
 	int init(const IPASettings &settings,
-		 const SharedFD &traceFd,
 		 const ipa::vimc::IPAOperationCode code,
 		 const Flags<ipa::vimc::TestFlag> inFlags,
 		 Flags<ipa::vimc::TestFlag> *outFlags) override;
@@ -52,28 +51,30 @@ public:
 	void computeParams(uint32_t frame, uint32_t bufferId) override;
 
 private:
+	void initTrace();
 	void trace(enum ipa::vimc::IPAOperationCode operation);
 
-	SharedFD fd_;
+	int fd_;
 	std::map<unsigned int, MappedFrameBuffer> buffers_;
 };
 
 IPAVimc::IPAVimc()
+	: fd_(-1)
 {
+	initTrace();
 }
 
 IPAVimc::~IPAVimc()
 {
+	if (fd_ != -1)
+		::close(fd_);
 }
 
 int IPAVimc::init(const IPASettings &settings,
-		  const SharedFD &traceFd,
 		  const ipa::vimc::IPAOperationCode code,
 		  const Flags<ipa::vimc::TestFlag> inFlags,
 		  Flags<ipa::vimc::TestFlag> *outFlags)
 {
-	fd_ = traceFd;
-
 	trace(ipa::vimc::IPAOperationInit);
 
 	LOG(IPAVimc, Debug)
@@ -161,12 +162,30 @@ void IPAVimc::computeParams([[maybe_unused]] uint32_t frame, uint32_t bufferId)
 	paramsComputed.emit(bufferId, flags);
 }
 
-void IPAVimc::trace(enum ipa::vimc::IPAOperationCode operation)
+void IPAVimc::initTrace()
 {
-	if (!fd_.isValid())
+	struct stat fifoStat;
+	int ret = stat(ipa::vimc::VimcIPAFIFOPath.c_str(), &fifoStat);
+	if (ret)
 		return;
 
-	int ret = ::write(fd_.get(), &operation, sizeof(operation));
+	ret = ::open(ipa::vimc::VimcIPAFIFOPath.c_str(), O_WRONLY | O_CLOEXEC);
+	if (ret < 0) {
+		ret = errno;
+		LOG(IPAVimc, Error) << "Failed to open vimc IPA test FIFO: "
+				    << strerror(ret);
+		return;
+	}
+
+	fd_ = ret;
+}
+
+void IPAVimc::trace(enum ipa::vimc::IPAOperationCode operation)
+{
+	if (fd_ < 0)
+		return;
+
+	int ret = ::write(fd_, &operation, sizeof(operation));
 	if (ret < 0) {
 		ret = errno;
 		LOG(IPAVimc, Error) << "Failed to write to vimc IPA test FIFO: "
