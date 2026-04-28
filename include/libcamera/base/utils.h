@@ -37,15 +37,6 @@ namespace libcamera {
 
 namespace utils {
 
-template<class... Ts>
-struct overloaded : Ts... {
-	using Ts::operator()...;
-};
-#ifndef __DOXYGEN__
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-#endif
-
 const char *basename(const char *path);
 
 char *secure_getenv(const char *name);
@@ -119,13 +110,13 @@ std::string join(const Container &items, const std::string &sep, UnaryOp op)
 	std::ostringstream ss;
 	bool first = true;
 
-	for (const auto &item : items) {
+	for (auto it = std::begin(items); it != std::end(items); ++it) {
 		if (!first)
 			ss << sep;
 		else
 			first = false;
 
-		ss << op(item);
+		ss << op(*it);
 	}
 
 	return ss.str();
@@ -137,13 +128,13 @@ std::string join(const Container &items, const std::string &sep)
 	std::ostringstream ss;
 	bool first = true;
 
-	for (const auto &item : items) {
+	for (auto it = std::begin(items); it != std::end(items); ++it) {
 		if (!first)
 			ss << sep;
 		else
 			first = false;
 
-		ss << item;
+		ss << *it;
 	}
 
 	return ss.str();
@@ -349,7 +340,7 @@ public:
 	template<typename Period>
 	double get() const
 	{
-		const auto c = std::chrono::duration_cast<std::chrono::duration<double, Period>>(*this);
+		auto const c = std::chrono::duration_cast<std::chrono::duration<double, Period>>(*this);
 		return c.count();
 	}
 

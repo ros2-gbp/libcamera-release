@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: CC-BY-SA-4.0
-
 /**
  * \page thread-safety Reentrancy and Thread-Safety
  *

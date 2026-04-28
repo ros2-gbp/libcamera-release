@@ -69,7 +69,7 @@ public:
 
 	CameraConfiguration::Status platformValidate(RPi::RPiCameraConfiguration *rpiConfig) const override;
 
-	int platformPipelineConfigure(const std::unique_ptr<ValueNode> &root) override;
+	int platformPipelineConfigure(const std::unique_ptr<YamlObject> &root) override;
 
 	void platformStart() override;
 	void platformStop() override;
@@ -233,7 +233,7 @@ int PipelineHandlerVc4::allocateBuffers(Camera *camera)
 	}
 
 	/* Decide how many internal buffers to allocate. */
-	for (const auto stream : data->streams_) {
+	for (auto const stream : data->streams_) {
 		unsigned int numBuffers;
 		/*
 		 * For Unicam, allocate a minimum number of buffers for internal
@@ -498,7 +498,7 @@ CameraConfiguration::Status Vc4CameraData::platformValidate(RPi::RPiCameraConfig
 	return status;
 }
 
-int Vc4CameraData::platformPipelineConfigure(const std::unique_ptr<ValueNode> &root)
+int Vc4CameraData::platformPipelineConfigure(const std::unique_ptr<YamlObject> &root)
 {
 	config_ = {
 		.minUnicamBuffers = 2,
@@ -521,7 +521,7 @@ int Vc4CameraData::platformPipelineConfigure(const std::unique_ptr<ValueNode> &r
 		return -EINVAL;
 	}
 
-	const ValueNode &phConfig = (*root)["pipeline_handler"];
+	const YamlObject &phConfig = (*root)["pipeline_handler"];
 	config_.minUnicamBuffers =
 		phConfig["min_unicam_buffers"].get<unsigned int>(config_.minUnicamBuffers);
 	config_.minTotalUnicamBuffers =

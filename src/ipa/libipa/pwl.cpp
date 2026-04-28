@@ -435,7 +435,7 @@ std::string Pwl::toString() const
  */
 template<>
 std::optional<ipa::Pwl>
-ValueNode::Accessor<ipa::Pwl>::get(const ValueNode &obj) const
+YamlObject::Getter<ipa::Pwl>::get(const YamlObject &obj) const
 {
 	/* Treat a single value as single point PWL. */
 	if (obj.isValue()) {

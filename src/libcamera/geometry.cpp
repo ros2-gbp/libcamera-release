@@ -12,8 +12,6 @@
 
 #include <libcamera/base/log.h>
 
-#include "libcamera/internal/value_node.h"
-
 /**
  * \file geometry.h
  * \brief Data structures related to geometric objects
@@ -925,32 +923,5 @@ std::ostream &operator<<(std::ostream &out, const Rectangle &r)
 	out << "(" << r.x << ", " << r.y << ")/" << r.width << "x" << r.height;
 	return out;
 }
-
-#ifndef __DOXYGEN__
-/*
- * The YAML data shall be a list of two numerical values containing the x and y
- * coordinates, in that order.
- */
-template<>
-std::optional<Size>
-ValueNode::Accessor<Size>::get(const ValueNode &obj) const
-{
-	if (obj.type_ != Type::List)
-		return std::nullopt;
-
-	if (obj.list_.size() != 2)
-		return std::nullopt;
-
-	auto width = obj.list_[0].value->get<uint32_t>();
-	if (!width)
-		return std::nullopt;
-
-	auto height = obj.list_[1].value->get<uint32_t>();
-	if (!height)
-		return std::nullopt;
-
-	return Size(*width, *height);
-}
-#endif /* __DOXYGEN__ */
 
 } /* namespace libcamera */

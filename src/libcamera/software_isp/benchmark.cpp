@@ -12,9 +12,6 @@
 
 #include <libcamera/base/log.h>
 
-#include "libcamera/internal/camera_manager.h"
-#include "libcamera/internal/global_configuration.h"
-
 namespace libcamera {
 
 LOG_DEFINE_CATEGORY(Benchmark)
@@ -29,11 +26,8 @@ LOG_DEFINE_CATEGORY(Benchmark)
 /**
  * \brief Constructs a Benchmark object
  */
-Benchmark::Benchmark(const CameraManager &cm, const std::string &name)
-	: name_(name)
+Benchmark::Benchmark(const GlobalConfiguration &configuration)
 {
-	const GlobalConfiguration &configuration = cm._d()->configuration();
-
 	skipBeforeMeasure_ = configuration.option<unsigned int>(
 						{ "software_isp", "measure", "skip" })
 							.value_or(skipBeforeMeasure_);
@@ -60,11 +54,11 @@ static inline int64_t timeDiff(timespec &after, timespec &before)
  */
 void Benchmark::startFrame(void)
 {
-	measure_ = framesToMeasure_ > 0 &&
-		   encounteredFrames_ < skipBeforeMeasure_ + framesToMeasure_ &&
-		   ++encounteredFrames_ > skipBeforeMeasure_;
+	measure = framesToMeasure_ > 0 &&
+		  encounteredFrames_ < skipBeforeMeasure_ + framesToMeasure_ &&
+		  ++encounteredFrames_ > skipBeforeMeasure_;
 
-	if (measure_) {
+	if (measure) {
 		frameStartTime_ = {};
 		clock_gettime(CLOCK_MONOTONIC_RAW, &frameStartTime_);
 	}
@@ -81,13 +75,13 @@ void Benchmark::startFrame(void)
  */
 void Benchmark::finishFrame(void)
 {
-	if (measure_) {
+	if (measure) {
 		timespec frameEndTime = {};
 		clock_gettime(CLOCK_MONOTONIC_RAW, &frameEndTime);
 		frameProcessTime_ += timeDiff(frameEndTime, frameStartTime_);
 		if (encounteredFrames_ == skipBeforeMeasure_ + framesToMeasure_) {
 			LOG(Benchmark, Info)
-				<< name_ << " processed " << framesToMeasure_
+				<< "Processed " << framesToMeasure_
 				<< " frames in " << frameProcessTime_ / 1000 << "us, "
 				<< frameProcessTime_ / (1000 * framesToMeasure_)
 				<< " us/frame";

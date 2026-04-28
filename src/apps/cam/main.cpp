@@ -126,8 +126,6 @@ int CamApp::parseOptions(int argc, char *argv[])
 			 ArgumentRequired, "camera", true);
 	parser.addOption(OptHelp, OptionNone, "Display this help message",
 			 "help");
-	parser.addOption(OptVersion, OptionNone, "Display libcamera version information",
-			 "version");
 	parser.addOption(OptInfo, OptionNone,
 			 "Display information about stream(s)", "info");
 	parser.addOption(OptList, OptionNone, "List all cameras", "list");
@@ -197,12 +195,6 @@ int CamApp::parseOptions(int argc, char *argv[])
 	if (options_.empty() || options_.isSet(OptHelp)) {
 		parser.usage();
 		return options_.empty() ? -EINVAL : -EINTR;
-	}
-
-	if (options_.isSet(OptVersion)) {
-		const std::string &version = CameraManager::version();
-		std::cout << "libcamera version " << version << std::endl;
-		return -EINTR;
 	}
 
 	return 0;

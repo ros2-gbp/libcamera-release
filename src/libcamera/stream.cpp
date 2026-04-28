@@ -108,8 +108,8 @@ std::vector<PixelFormat> StreamFormats::pixelformats() const
 {
 	std::vector<PixelFormat> formats;
 
-	for (const auto &[format, sizes] : formats_)
-		formats.push_back(format);
+	for (auto const &it : formats_)
+		formats.push_back(it.first);
 
 	return formats;
 }
@@ -194,7 +194,7 @@ std::vector<Size> StreamFormats::sizes(const PixelFormat &pixelformat) const
 	std::vector<Size> sizes;
 
 	/* Make sure pixel format exists. */
-	const auto &it = formats_.find(pixelformat);
+	auto const &it = formats_.find(pixelformat);
 	if (it == formats_.end())
 		return {};
 
@@ -243,7 +243,7 @@ std::vector<Size> StreamFormats::sizes(const PixelFormat &pixelformat) const
  */
 SizeRange StreamFormats::range(const PixelFormat &pixelformat) const
 {
-	const auto it = formats_.find(pixelformat);
+	auto const it = formats_.find(pixelformat);
 	if (it == formats_.end())
 		return {};
 

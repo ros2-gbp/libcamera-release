@@ -114,12 +114,12 @@ public:
 		appendPOD<uint32_t>(dataVec, vecLen);
 
 		/* Serialize the members. */
-		for (const auto &value : data) {
+		for (auto const &it : data) {
 			std::vector<uint8_t> dvec;
 			std::vector<SharedFD> fvec;
 
 			std::tie(dvec, fvec) =
-				IPADataSerializer<V>::serialize(value, cs);
+				IPADataSerializer<V>::serialize(it, cs);
 
 			appendPOD<uint32_t>(dataVec, dvec.size());
 			appendPOD<uint32_t>(dataVec, fvec.size());
@@ -211,12 +211,12 @@ public:
 		appendPOD<uint32_t>(dataVec, mapLen);
 
 		/* Serialize the members. */
-		for (const auto &[key, value] : data) {
+		for (auto const &it : data) {
 			std::vector<uint8_t> dvec;
 			std::vector<SharedFD> fvec;
 
 			std::tie(dvec, fvec) =
-				IPADataSerializer<K>::serialize(key, cs);
+				IPADataSerializer<K>::serialize(it.first, cs);
 
 			appendPOD<uint32_t>(dataVec, dvec.size());
 			appendPOD<uint32_t>(dataVec, fvec.size());
@@ -225,7 +225,7 @@ public:
 			fdsVec.insert(fdsVec.end(), fvec.begin(), fvec.end());
 
 			std::tie(dvec, fvec) =
-				IPADataSerializer<V>::serialize(value, cs);
+				IPADataSerializer<V>::serialize(it.second, cs);
 
 			appendPOD<uint32_t>(dataVec, dvec.size());
 			appendPOD<uint32_t>(dataVec, fvec.size());

@@ -109,17 +109,18 @@ protected:
 
 	int testFile()
 	{
-		UniqueFD fd = test::createTemporaryFile();
-		if (!fd.isValid()) {
+		int fd = open("/tmp", O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR);
+		if (fd < 0) {
 			cerr << "Failed to open tmp log file" << endl;
 			return TestFail;
 		}
 
 		char path[32];
-		snprintf(path, sizeof(path), "/proc/self/fd/%u", fd.get());
+		snprintf(path, sizeof(path), "/proc/self/fd/%u", fd);
 
 		if (logSetFile(path) < 0) {
 			cerr << "Failed to set log file" << endl;
+			close(fd);
 			return TestFail;
 		}
 
@@ -127,11 +128,13 @@ protected:
 
 		char buf[1000];
 		memset(buf, 0, sizeof(buf));
-		lseek(fd.get(), 0, SEEK_SET);
-		if (read(fd.get(), buf, sizeof(buf)) < 0) {
+		lseek(fd, 0, SEEK_SET);
+		if (read(fd, buf, sizeof(buf)) < 0) {
 			cerr << "Failed to read tmp log file" << endl;
+			close(fd);
 			return TestFail;
 		}
+		close(fd);
 
 		istringstream iss(buf);
 		return verifyOutput(iss);

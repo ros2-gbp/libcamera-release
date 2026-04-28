@@ -64,7 +64,7 @@ headers="
 "
 
 for header in $headers ; do
-	name="${header#*/}"
+	name=$(basename "${header}")
 	cp "${install_dir}/usr/include/${header}" "${header_dir}/${name}"
 done
 

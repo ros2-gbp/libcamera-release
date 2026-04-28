@@ -392,7 +392,8 @@ void Request::reuse(ReuseFlag flags)
 	_d()->reset();
 
 	if (flags & ReuseBuffers) {
-		for (const auto &[stream, buffer] : bufferMap_) {
+		for (auto pair : bufferMap_) {
+			FrameBuffer *buffer = pair.second;
 			buffer->_d()->setRequest(this);
 			_d()->pending_.insert(buffer);
 		}
