@@ -1,4 +1,4 @@
-From 2df4baa4682b3ff37766912817cedaa10b256dea Mon Sep 17 00:00:00 2001
+From e37dc3055611f9f4d0376ba28513da6daa168ce4 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 8 Apr 2025 23:04:12 +0200
 Subject: [PATCH 2/6] allow downloading subproject "libpisp"
