@@ -110,4 +110,5 @@ tracks:
     ros_distro: rolling
     vcs_type: git
     vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
-    version: :{ask}
+    version: 0.7.0
+    version_saved: :{ask}
