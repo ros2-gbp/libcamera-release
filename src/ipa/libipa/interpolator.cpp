@@ -48,7 +48,7 @@ namespace ipa {
  */
 
 /**
- * \fn int Interpolator<T>::readYaml(const ValueNode &yaml,
+ * \fn int Interpolator<T>::readYaml(const libcamera::YamlObject &yaml,
 		                     const std::string &key_name,
 		                     const std::string &value_name)
  * \brief Initialize an Interpolator instance from yaml

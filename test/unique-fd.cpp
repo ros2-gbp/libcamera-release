@@ -189,7 +189,7 @@ protected:
 private:
 	int createFd()
 	{
-		fd_ = test::createTemporaryFile().release();
+		fd_ = open("/tmp", O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR);
 		if (fd_ < 0)
 			return TestFail;
 

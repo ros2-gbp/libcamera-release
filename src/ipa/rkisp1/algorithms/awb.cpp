@@ -30,7 +30,7 @@ namespace ipa::rkisp1::algorithms {
 
 /**
  * \class Awb
- * \brief Manage the white balance with automatic and manual controls
+ * \brief A Grey world white balance correction algorithm
  */
 
 LOG_DEFINE_CATEGORY(RkISP1Awb)
@@ -84,7 +84,7 @@ Awb::Awb()
 /**
  * \copydoc libcamera::ipa::Algorithm::init
  */
-int Awb::init(IPAContext &context, const ValueNode &tuningData)
+int Awb::init(IPAContext &context, const YamlObject &tuningData)
 {
 	auto &cmap = context.ctrlMap;
 	cmap[&controls::ColourTemperature] = ControlInfo(kMinColourTemperature,

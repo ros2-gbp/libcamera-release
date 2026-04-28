@@ -1,23 +1,12 @@
 # SPDX-License-Identifier: CC0-1.0
 
 softisp_enabled = pipelines.contains('simple')
-summary({'SoftISP support' : softisp_enabled},
-        bool_yn : true,
-        section : 'Configuration')
+summary({'SoftISP support' : softisp_enabled}, section : 'Configuration')
+summary({'SoftISP GPU acceleration' : gles_headless_enabled}, section : 'Configuration')
 
 if not softisp_enabled
     subdir_done()
 endif
-
-libegl = dependency('egl', required : get_option('softisp-gpu'))
-libglesv2 = dependency('glesv2', required : get_option('softisp-gpu'))
-mesa_works = cc.check_header('EGL/egl.h',
-                             required : get_option('softisp-gpu'),
-                             dependencies : libegl)
-
-summary({'SoftISP GPU acceleration' : mesa_works},
-        bool_yn : true,
-        section : 'Configuration')
 
 libcamera_internal_sources += files([
     'benchmark.cpp',
@@ -27,14 +16,9 @@ libcamera_internal_sources += files([
     'swstats_cpu.cpp',
 ])
 
-if mesa_works
+if softisp_enabled and gles_headless_enabled
     config_h.set('HAVE_DEBAYER_EGL', 1)
     libcamera_internal_sources += files([
-        '../egl.cpp',
         'debayer_egl.cpp',
     ])
-    libcamera_deps += [
-        libegl,
-        libglesv2,
-    ]
 endif

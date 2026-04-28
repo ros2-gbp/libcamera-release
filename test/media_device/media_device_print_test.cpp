@@ -66,15 +66,15 @@ void MediaDevicePrintTest::printMediaGraph(const MediaDevice &media, ostream &os
 {
 	os << "\n" << media.driver() << " - " << media.deviceNode() << "\n\n";
 
-	for (const auto &entity : media.entities()) {
+	for (auto const &entity : media.entities()) {
 		os << "\"" << entity->name() << "\"\n";
 
-		for (const auto &sink : entity->pads()) {
+		for (auto const &sink : entity->pads()) {
 			if (!(sink->flags() & MEDIA_PAD_FL_SINK))
 				continue;
 
 			os << "  [" << sink->index() << "]" << ": Sink\n";
-			for (const auto &link : sink->links()) {
+			for (auto const &link : sink->links()) {
 				os << "\t";
 				printNode(sink, os);
 				os << " <- ";
@@ -84,12 +84,12 @@ void MediaDevicePrintTest::printMediaGraph(const MediaDevice &media, ostream &os
 			os << "\n";
 		}
 
-		for (const auto &source : entity->pads()) {
+		for (auto const &source : entity->pads()) {
 			if (!(source->flags() & MEDIA_PAD_FL_SOURCE))
 				continue;
 
 			os << "  [" << source->index() << "]" << ": Source\n";
-			for (const auto &link : source->links()) {
+			for (auto const &link : source->links()) {
 				os << "\t";
 				printNode(source, os);
 				os << " -> ";

@@ -13,7 +13,7 @@
 
 #include <libcamera/ipa/ipa_interface.h>
 
-#include "libcamera/internal/camera_manager.h"
+#include "libcamera/internal/global_configuration.h"
 
 namespace libcamera {
 
@@ -28,7 +28,7 @@ public:
 		ProxyRunning,
 	};
 
-	IPAProxy(IPAModule *ipam, const CameraManager &cm);
+	IPAProxy(IPAModule *ipam, const GlobalConfiguration &configuration);
 	~IPAProxy();
 
 	bool isValid() const { return valid_; }

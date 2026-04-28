@@ -38,7 +38,7 @@ char const *Contrast::name() const
 	return NAME;
 }
 
-int Contrast::read(const libcamera::ValueNode &params)
+int Contrast::read(const libcamera::YamlObject &params)
 {
 	// enable adaptive enhancement by default
 	config_.ceEnable = params["ce_enable"].get<int>(1);

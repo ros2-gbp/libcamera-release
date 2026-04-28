@@ -89,7 +89,7 @@ private:
 	std::string deviceNode_;
 	UniqueFD fd_;
 
-	std::unique_ptr<EventNotifier> fdEventNotifier_;
+	EventNotifier *fdEventNotifier_;
 	bool frameStartEnabled_;
 };
 

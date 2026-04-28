@@ -82,7 +82,7 @@ cameras in the system:
 
 .. code:: cpp
 
-   for (const auto &camera : cm->cameras())
+   for (auto const &camera : cm->cameras())
        std::cout << camera->id() << std::endl;
 
 Printing the camera id lists the machine-readable unique identifiers, so for
@@ -279,7 +279,7 @@ as the parameter of the ``FrameBufferAllocator::buffers()`` function.
 
 .. code:: cpp
 
-   auto allocator = std::make_unique<FrameBufferAllocator>(camera);
+   FrameBufferAllocator *allocator = new FrameBufferAllocator(camera);
 
    for (StreamConfiguration &cfg : *config) {
        int ret = allocator->allocate(cfg.stream());
@@ -539,7 +539,7 @@ uses, so needs to do the following:
 
    camera->stop();
    allocator->free(stream);
-   allocator.reset();
+   delete allocator;
    camera->release();
    camera.reset();
    cm->stop();

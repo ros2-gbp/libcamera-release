@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: BSD-2-Clause */
 #pragma once
 
 #include <libipa/pwl.h>
@@ -18,7 +17,7 @@ class Decompand : public DecompandAlgorithm
 public:
 	Decompand(Controller *controller = nullptr);
 	char const *name() const override;
-	int read(const libcamera::ValueNode &params) override;
+	int read(const libcamera::YamlObject &params) override;
 	void initialise() override;
 	void switchMode(CameraMode const &cameraMode, Metadata *metadata) override;
 	void initialValues(libcamera::ipa::Pwl &decompandCurve) override;

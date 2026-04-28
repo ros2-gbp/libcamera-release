@@ -28,12 +28,14 @@ namespace libcamera {
 LOG_DECLARE_CATEGORY(DeviceEnumerator)
 
 DeviceEnumeratorUdev::DeviceEnumeratorUdev()
-	: udev_(nullptr), monitor_(nullptr)
+	: udev_(nullptr), monitor_(nullptr), notifier_(nullptr)
 {
 }
 
 DeviceEnumeratorUdev::~DeviceEnumeratorUdev()
 {
+	delete notifier_;
+
 	if (monitor_)
 		udev_monitor_unref(monitor_);
 	if (udev_)
@@ -210,7 +212,7 @@ done:
 		return ret;
 
 	int fd = udev_monitor_get_fd(monitor_);
-	notifier_ = std::make_unique<EventNotifier>(fd, EventNotifier::Read);
+	notifier_ = new EventNotifier(fd, EventNotifier::Read);
 	notifier_->activated.connect(this, &DeviceEnumeratorUdev::udevNotify);
 
 	return 0;

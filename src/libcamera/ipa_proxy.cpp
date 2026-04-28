@@ -117,17 +117,13 @@ std::string ipaConfigurationFile(const std::string &ipaName, const std::string &
 /**
  * \brief Construct an IPAProxy instance
  * \param[in] ipam The IPA module
- * \param[in] cm The camera manager
+ * \param[in] configuration The global configuration
  */
-IPAProxy::IPAProxy(IPAModule *ipam, const CameraManager &cm)
-	: valid_(false), state_(ProxyStopped), ipam_(ipam)
+IPAProxy::IPAProxy(IPAModule *ipam, const GlobalConfiguration &configuration)
+	: valid_(false), state_(ProxyStopped), ipam_(ipam),
+	  configPaths_(configuration.envListOption("LIBCAMERA_IPA_CONFIG_PATH", { "ipa", "config_paths" }).value_or(std::vector<std::string>())),
+	  execPaths_(configuration.envListOption("LIBCAMERA_IPA_PROXY_PATH", { "ipa", "proxy_paths" }).value_or(std::vector<std::string>()))
 {
-	const GlobalConfiguration &configuration = cm._d()->configuration();
-
-	configPaths_ = configuration.listOption({ "ipa", "config_paths" })
-				    .value_or(std::vector<std::string>());
-	execPaths_ = configuration.listOption({ "ipa", "proxy_paths" })
-				  .value_or(std::vector<std::string>());
 }
 
 IPAProxy::~IPAProxy()

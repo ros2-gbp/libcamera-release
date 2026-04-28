@@ -41,7 +41,7 @@ Lux::Lux()
 /**
  * \copydoc libcamera::ipa::Algorithm::init
  */
-int Lux::init([[maybe_unused]] IPAContext &context, const ValueNode &tuningData)
+int Lux::init([[maybe_unused]] IPAContext &context, const YamlObject &tuningData)
 {
 	return lux_.parseTuningData(tuningData);
 }

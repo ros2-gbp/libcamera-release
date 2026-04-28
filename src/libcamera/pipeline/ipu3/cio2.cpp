@@ -82,11 +82,11 @@ std::vector<SizeRange> CIO2Device::sizes(const PixelFormat &format) const
 		return {};
 
 	std::vector<SizeRange> sizes;
-	for (const auto &[code, pixelFormat] : mbusCodesToPixelFormat) {
-		if (pixelFormat != format)
+	for (const auto &iter : mbusCodesToPixelFormat) {
+		if (iter.second != format)
 			continue;
 
-		mbusCode = code;
+		mbusCode = iter.first;
 		break;
 	}
 

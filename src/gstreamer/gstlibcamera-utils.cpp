@@ -749,9 +749,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 	switch (value.type()) {
 	case ControlTypeBool:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const bool>>()) {
+			Span<const bool> data = value.get<Span<const bool>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_boolean(&x, item);
+				g_value_set_boolean(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -761,9 +762,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeByte:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const uint8_t>>()) {
+			Span<const uint8_t> data = value.get<Span<const uint8_t>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_uint(&x, item);
+				g_value_set_uint(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -773,9 +775,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeUnsigned16:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const uint16_t>>()) {
+			Span<const uint16_t> data = value.get<Span<const uint16_t>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_uint(&x, item);
+				g_value_set_uint(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -785,9 +788,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeUnsigned32:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const uint32_t>>()) {
+			Span<const uint32_t> data = value.get<Span<const uint32_t>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_uint(&x, item);
+				g_value_set_uint(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -797,9 +801,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeInteger32:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const int32_t>>()) {
+			Span<const int32_t> data = value.get<Span<const int32_t>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_int(&x, item);
+				g_value_set_int(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -822,9 +827,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeInteger64:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const int64_t>>()) {
+			Span<const int64_t> data = value.get<Span<const int64_t>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_int64(&x, item);
+				g_value_set_int64(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -834,9 +840,10 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeFloat:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const float>>()) {
+			Span<const float> data = value.get<Span<const float>>();
+			for (auto it = data.begin(); it != data.end(); ++it) {
 				g_value_init(&x, type);
-				g_value_set_float(&x, item);
+				g_value_set_float(&x, *it);
 				gst_value_array_append_and_take_value(&v, &x);
 			}
 		} else {
@@ -855,24 +862,27 @@ int gst_libcamera_set_structure_field(GstStructure *structure, const ControlId *
 		break;
 	case ControlTypeSize:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const Size>>())
-				gst_libcamera_gvalue_set_size(&v, item);
+			Span<const Size> data = value.get<Span<const Size>>();
+			for (auto it = data.begin(); it != data.end(); ++it)
+				gst_libcamera_gvalue_set_size(&v, *it);
 		} else {
 			gst_libcamera_gvalue_set_size(&v, value.get<const Size>());
 		}
 		break;
 	case ControlTypePoint:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const Point>>())
-				gst_libcamera_gvalue_set_point(&v, item);
+			Span<const Point> data = value.get<Span<const Point>>();
+			for (auto it = data.begin(); it != data.end(); ++it)
+				gst_libcamera_gvalue_set_point(&v, *it);
 		} else {
 			gst_libcamera_gvalue_set_point(&v, value.get<const Point>());
 		}
 		break;
 	case ControlTypeRectangle:
 		if (is_array) {
-			for (const auto &item : value.get<Span<const Rectangle>>())
-				gst_libcamera_gvalue_set_rectangle(&v, item);
+			Span<const Rectangle> data = value.get<Span<const Rectangle>>();
+			for (auto it = data.begin(); it != data.end(); ++it)
+				gst_libcamera_gvalue_set_rectangle(&v, *it);
 		} else {
 			gst_libcamera_gvalue_set_rectangle(&v, value.get<const Rectangle>());
 		}

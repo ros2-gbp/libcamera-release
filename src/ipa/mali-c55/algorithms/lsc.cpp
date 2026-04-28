@@ -7,7 +7,7 @@
 
 #include "lsc.h"
 
-#include "libcamera/internal/value_node.h"
+#include "libcamera/internal/yaml_parser.h"
 
 namespace libcamera {
 
@@ -15,7 +15,7 @@ namespace ipa::mali_c55::algorithms {
 
 LOG_DEFINE_CATEGORY(MaliC55Lsc)
 
-int Lsc::init([[maybe_unused]] IPAContext &context, const ValueNode &tuningData)
+int Lsc::init([[maybe_unused]] IPAContext &context, const YamlObject &tuningData)
 {
 	if (!tuningData.contains("meshScale")) {
 		LOG(MaliC55Lsc, Error) << "meshScale missing from tuningData";
@@ -24,7 +24,7 @@ int Lsc::init([[maybe_unused]] IPAContext &context, const ValueNode &tuningData)
 
 	meshScale_ = tuningData["meshScale"].get<uint32_t>(0);
 
-	const ValueNode &yamlSets = tuningData["sets"];
+	const YamlObject &yamlSets = tuningData["sets"];
 	if (!yamlSets.isList()) {
 		LOG(MaliC55Lsc, Error) << "LSC tables missing or invalid";
 		return -EINVAL;
@@ -48,11 +48,11 @@ int Lsc::init([[maybe_unused]] IPAContext &context, const ValueNode &tuningData)
 		}
 
 		std::vector<uint8_t> rTable =
-			yamlSet["r"].get<std::vector<uint8_t>>().value_or(std::vector<uint8_t>{});
+			yamlSet["r"].getList<uint8_t>().value_or(std::vector<uint8_t>{});
 		std::vector<uint8_t> gTable =
-			yamlSet["g"].get<std::vector<uint8_t>>().value_or(std::vector<uint8_t>{});
+			yamlSet["g"].getList<uint8_t>().value_or(std::vector<uint8_t>{});
 		std::vector<uint8_t> bTable =
-			yamlSet["b"].get<std::vector<uint8_t>>().value_or(std::vector<uint8_t>{});
+			yamlSet["b"].getList<uint8_t>().value_or(std::vector<uint8_t>{});
 
 		/*
 		 * Some validation to do; only 16x16 and 32x32 tables of
