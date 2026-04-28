@@ -1,4 +1,4 @@
-From 25c418f3a2e61c3b9da4f0c623ac7e7e98dee6c6 Mon Sep 17 00:00:00 2001
+From 571522adb8d5b85e60e9dbc5ccec3a7011a65e94 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 21 May 2024 21:33:01 +0200
 Subject: [PATCH 1/6] resign IPA plugins
@@ -8,7 +8,7 @@ Subject: [PATCH 1/6] resign IPA plugins
  1 file changed, 6 insertions(+)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index f19cc75..6c7d27e 100755
+index f19cc7542bac..6c7d27e0fcd2 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -50,3 +50,9 @@ override_dh_shlibdeps:
@@ -22,5 +22,5 @@ index f19cc75..6c7d27e 100755
 +		./.obj-${DEB_HOST_GNU_TYPE}/src/ipa-priv-key.pem \
 +		debian/@(Package)/@(InstallationPrefix)/lib/libcamera/ipa_*.so
 -- 
-2.43.0
+2.53.0
 

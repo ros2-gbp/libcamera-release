@@ -1,4 +1,4 @@
-From 50b82bf2c884984cb5d44de8e76d6bb30991183e Mon Sep 17 00:00:00 2001
+From d92eb534524638e4f61a1797001c35ea33b4d3f7 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Mon, 13 Oct 2025 21:19:51 +0200
 Subject: [PATCH 6/6] only fall back to 'libpisp' and its dependency
@@ -9,7 +9,7 @@ Subject: [PATCH 6/6] only fall back to 'libpisp' and its dependency
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index cd99f4b..3c54091 100755
+index cd99f4b9ada0..3c540912c567 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -29,7 +29,8 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -23,5 +23,5 @@ index cd99f4b..3c54091 100755
  		--cmake-prefix-path="@(InstallationPrefix)" \
  		--libdir=lib \
 -- 
-2.43.0
+2.53.0
 

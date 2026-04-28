@@ -1,4 +1,4 @@
-From e594055415b183eb5dfe1edd0d291c2504e47c8a Mon Sep 17 00:00:00 2001
+From 407bd2578e368e92375214556466654757ddb8c1 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Fri, 10 Oct 2025 22:33:00 +0200
 Subject: [PATCH 5/6] only fallback to 'libpisp' subproject
@@ -8,7 +8,7 @@ Subject: [PATCH 5/6] only fallback to 'libpisp' subproject
  1 file changed, 1 deletion(-)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index c839a96..cd99f4b 100755
+index c839a96fe7be..cd99f4b9ada0 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -29,7 +29,6 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -20,5 +20,5 @@ index c839a96..cd99f4b 100755
  		--prefix="@(InstallationPrefix)" \
  		--cmake-prefix-path="@(InstallationPrefix)" \
 -- 
-2.43.0
+2.53.0
 
