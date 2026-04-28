@@ -20,7 +20,6 @@ enum {
 	OptOrientation = 'o',
 	OptSDL = 'S',
 	OptStream = 's',
-	OptVersion = 'v',
 	OptListControls = 256,
 	OptStrictFormats = 257,
 	OptMetadata = 258,

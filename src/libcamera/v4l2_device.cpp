@@ -123,8 +123,7 @@ int V4L2Device::setFd(UniqueFD fd)
 
 	fd_ = std::move(fd);
 
-	fdEventNotifier_ = std::make_unique<EventNotifier>(fd_.get(),
-							   EventNotifier::Exception);
+	fdEventNotifier_ = new EventNotifier(fd_.get(), EventNotifier::Exception);
 	fdEventNotifier_->activated.connect(this, &V4L2Device::eventAvailable);
 	fdEventNotifier_->setEnabled(false);
 
@@ -143,7 +142,7 @@ void V4L2Device::close()
 	if (!isOpen())
 		return;
 
-	fdEventNotifier_.reset();
+	delete fdEventNotifier_;
 
 	fd_.reset();
 }

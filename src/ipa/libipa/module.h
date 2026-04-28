@@ -15,7 +15,7 @@
 #include <libcamera/base/log.h>
 #include <libcamera/base/utils.h>
 
-#include "libcamera/internal/value_node.h"
+#include "libcamera/internal/yaml_parser.h"
 
 #include "algorithm.h"
 
@@ -43,7 +43,7 @@ public:
 		return algorithms_;
 	}
 
-	int createAlgorithms(Context &context, const ValueNode &algorithms)
+	int createAlgorithms(Context &context, const YamlObject &algorithms)
 	{
 		const auto &list = algorithms.asList();
 
@@ -71,7 +71,7 @@ public:
 	}
 
 private:
-	int createAlgorithm(Context &context, const ValueNode &data)
+	int createAlgorithm(Context &context, const YamlObject &data)
 	{
 		const auto &[name, algoData] = *data.asDict().begin();
 

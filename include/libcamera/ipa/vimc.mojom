@@ -8,6 +8,8 @@ module ipa.vimc;
 
 import "include/libcamera/ipa/core.mojom";
 
+const string VimcIPAFIFOPath = "/tmp/libcamera_ipa_vimc_fifo";
+
 enum IPAOperationCode {
 	IPAOperationNone,
 	IPAOperationInit,
@@ -24,7 +26,6 @@ enum IPAOperationCode {
 
 interface IPAVimcInterface {
 	init(libcamera.IPASettings settings,
-	     libcamera.SharedFD traceFd,
 	     IPAOperationCode code,
 	     [flags] TestFlag inFlags)
 	=> (int32 ret, [flags] TestFlag outFlags);

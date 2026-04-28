@@ -31,7 +31,7 @@ char const *Agc::name() const
 	return NAME;
 }
 
-int Agc::read(const libcamera::ValueNode &params)
+int Agc::read(const libcamera::YamlObject &params)
 {
 	/*
 	 * When there is only a single channel we can read the old style syntax.
@@ -45,10 +45,10 @@ int Agc::read(const libcamera::ValueNode &params)
 	}
 
 	const auto &channels = params["channels"].asList();
-	for (const auto &ch : channels) {
+	for (auto ch = channels.begin(); ch != channels.end(); ch++) {
 		LOG(RPiAgc, Debug) << "Read AGC channel";
 		channelData_.emplace_back();
-		int ret = channelData_.back().channel.read(ch, getHardwareConfig());
+		int ret = channelData_.back().channel.read(*ch, getHardwareConfig());
 		if (ret)
 			return ret;
 	}

@@ -18,7 +18,6 @@
 #include <QFileDialog>
 #include <QImage>
 #include <QImageWriter>
-#include <QMessageBox>
 #include <QMutexLocker>
 #include <QStandardPaths>
 #include <QStringList>
@@ -87,8 +86,8 @@ private:
 };
 
 MainWindow::MainWindow(CameraManager *cm, const OptionsParser::Options &options)
-	: saveRaw_(nullptr), options_(options), cm_(cm), isCapturing_(false),
-	  captureRaw_(false)
+	: saveRaw_(nullptr), options_(options), cm_(cm), allocator_(nullptr),
+	  isCapturing_(false), captureRaw_(false)
 {
 	int ret;
 
@@ -450,7 +449,7 @@ int MainWindow::startCapture()
 		saveRaw_->setEnabled(config_->size() == 2);
 
 	/* Allocate and map buffers. */
-	allocator_ = std::make_unique<FrameBufferAllocator>(camera_);
+	allocator_ = new FrameBufferAllocator(camera_);
 	for (StreamConfiguration &config : *config_) {
 		Stream *stream = config.stream();
 
@@ -531,7 +530,8 @@ error:
 
 	freeBuffers_.clear();
 
-	allocator_.reset();
+	delete allocator_;
+	allocator_ = nullptr;
 
 	return ret;
 }
@@ -563,7 +563,7 @@ void MainWindow::stopCapture()
 	requests_.clear();
 	freeQueue_.clear();
 
-	allocator_.reset();
+	delete allocator_;
 
 	isCapturing_ = false;
 
@@ -637,8 +637,7 @@ void MainWindow::saveImageAs()
 
 	QImageWriter writer(filename);
 	writer.setQuality(95);
-	if (!writer.write(image))
-		QMessageBox::warning(this, "Failed to save image", writer.errorString());
+	writer.write(image);
 }
 
 void MainWindow::captureRaw()

@@ -80,7 +80,7 @@ private:
 	bool isRunning_;
 
 	libcamera::Mutex bufferLock_;
-	std::unique_ptr<libcamera::FrameBufferAllocator> bufferAllocator_;
+	libcamera::FrameBufferAllocator *bufferAllocator_;
 
 	std::vector<std::unique_ptr<libcamera::Request>> requestPool_;
 

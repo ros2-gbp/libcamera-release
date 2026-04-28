@@ -1,5 +1,3 @@
-/* SPDX-License-Identifier: BSD-2-Clause */
-
 #include "decompand.h"
 
 #include <libcamera/base/log.h>
@@ -24,7 +22,7 @@ char const *Decompand::name() const
 	return NAME;
 }
 
-int Decompand::read(const libcamera::ValueNode &params)
+int Decompand::read(const libcamera::YamlObject &params)
 {
 	config_.bitdepth = params["bitdepth"].get<uint32_t>(0);
 	config_.decompandCurve = params["decompand_curve"].get<ipa::Pwl>(ipa::Pwl{});
