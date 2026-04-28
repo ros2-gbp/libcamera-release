@@ -100,11 +100,11 @@ tracks:
     - git-bloom-generate -y rosdynrpm --prefix release/:{ros_distro} :{ros_distro}
       -i :{release_inc} --require-os fedora rhel
     devel_branch: null
-    last_release: v0.7.1
-    last_version: 0.7.1
+    last_release: v0.7.0
+    last_version: 0.7.0
     name: upstream
     patches: patches
-    release_inc: '2'
+    release_inc: '3'
     release_repo_url: https://github.com/ros2-gbp/libcamera-release.git
     release_tag: v:{version}
     ros_distro: rolling
