@@ -1,4 +1,4 @@
-From 2756c264b05b0dd5b3d683252ad4db034872fe8e Mon Sep 17 00:00:00 2001
+From 863bf39d99633f906a77c1195c58ae06c8af36cd Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Fri, 10 Oct 2025 22:33:00 +0200
 Subject: [PATCH 5/6] only fallback to 'libpisp' subproject
