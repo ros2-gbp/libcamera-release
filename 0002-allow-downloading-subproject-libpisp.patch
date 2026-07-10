@@ -1,4 +1,4 @@
-From 3fdd9871a4598b766055affcd3de0508fe0d809a Mon Sep 17 00:00:00 2001
+From 1e31e14451954a1e880ddfde944aa6094c6acd9a Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Tue, 8 Apr 2025 23:04:12 +0200
 Subject: [PATCH 2/6] allow downloading subproject "libpisp"
@@ -21,5 +21,5 @@ index 6c7d27e..c839a96 100755
  		--cmake-prefix-path="@(InstallationPrefix)" \
  		--libdir=lib \
 -- 
-2.43.0
+2.53.0
 

@@ -1,4 +1,4 @@
-From a152db5d7058f46adc1a336cfbb6f26f8c2a5a69 Mon Sep 17 00:00:00 2001
+From 46259a7743b35ec220c14c3ecb84c87f7b0b95b7 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Sat, 9 Aug 2025 20:06:47 +0200
 Subject: [PATCH 4/6] Revert "ignore unused parameters in subproject "libpisp""
@@ -23,5 +23,5 @@ index 90a6fd9..c839a96 100755
  override_dh_auto_build:
  	if [ -f "@(InstallationPrefix)/setup.sh" ]; then . "@(InstallationPrefix)/setup.sh"; fi && \
 -- 
-2.43.0
+2.53.0
 
