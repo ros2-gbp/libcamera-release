@@ -1,4 +1,4 @@
-From 726faa896e9ec9fbd2fca49d5ae059156130e64c Mon Sep 17 00:00:00 2001
+From 15b666b8bda5b2606161cbac620c1ac29507b674 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Fri, 10 Oct 2025 22:31:27 +0200
 Subject: [PATCH 5/6] only fallback to 'libpisp' subproject
@@ -20,5 +20,5 @@ index c839a96..cd99f4b 100755
  		--prefix="@(InstallationPrefix)" \
  		--cmake-prefix-path="@(InstallationPrefix)" \
 -- 
-2.43.0
+2.53.0
 
