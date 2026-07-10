@@ -1,4 +1,4 @@
-From a086e509c997529bc818e8c23852a5c218b8dac6 Mon Sep 17 00:00:00 2001
+From 897f2f90b2c4202250fb8ea5011da2e80e35c6a8 Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Mon, 13 Oct 2025 21:19:51 +0200
 Subject: [PATCH 6/6] only fall back to 'libpisp' and its dependency
@@ -23,5 +23,5 @@ index cd99f4b..3c54091 100755
  		--cmake-prefix-path="@(InstallationPrefix)" \
  		--libdir=lib \
 -- 
-2.43.0
+2.53.0
 
