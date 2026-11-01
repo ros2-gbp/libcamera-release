@@ -1,4 +1,4 @@
-From 174c978fd3d1c6891ae45c4a233002f244e41a10 Mon Sep 17 00:00:00 2001
+From 5374db95fc2ce8f56a3430c1de255d53295582dc Mon Sep 17 00:00:00 2001
 From: Christian Rauch <Rauch.Christian@gmx.de>
 Date: Mon, 13 Oct 2025 21:19:51 +0200
 Subject: [PATCH 6/6] only fall back to 'libpisp' and its dependency
