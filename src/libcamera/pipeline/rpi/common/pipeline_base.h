@@ -89,6 +89,7 @@ public:
 	void frameStarted(uint32_t sequence);
 
 	void clearIncompleteRequests();
+	void clearImmediateControls();
 	void handleStreamBuffer(FrameBuffer *buffer, Stream *stream);
 	void handleState();
 
@@ -224,7 +225,7 @@ public:
 						   BayerFormat::Packing packingReq);
 
 	std::unique_ptr<CameraConfiguration>
-	generateConfiguration(Camera *camera, Span<const StreamRole> roles) override;
+	generateConfiguration(Camera *camera, std::span<const StreamRole> roles) override;
 	int configure(Camera *camera, CameraConfiguration *config) override;
 
 	int exportFrameBuffers(Camera *camera, libcamera::Stream *stream,
