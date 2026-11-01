@@ -24,6 +24,7 @@
 
 #include "libcamera/internal/bayer_format.h"
 #include "libcamera/internal/camera_manager.h"
+#include "libcamera/internal/formats.h"
 #include "libcamera/internal/framebuffer.h"
 #include "libcamera/internal/global_configuration.h"
 #include "libcamera/internal/mapped_framebuffer.h"
@@ -469,26 +470,8 @@ int DebayerCpu::getInputConfig(PixelFormat inputFormat, DebayerInputConfig &conf
 		return 0;
 	}
 
-	LOG(Debayer, Info)
-		<< "Unsupported input format " << inputFormat.toString();
-	return -EINVAL;
-}
-
-int DebayerCpu::getOutputConfig(PixelFormat outputFormat, DebayerOutputConfig &config)
-{
-	if (outputFormat == formats::RGB888 || outputFormat == formats::BGR888) {
-		config.bpp = 24;
-		return 0;
-	}
-
-	if (outputFormat == formats::XRGB8888 || outputFormat == formats::ARGB8888 ||
-	    outputFormat == formats::XBGR8888 || outputFormat == formats::ABGR8888) {
-		config.bpp = 32;
-		return 0;
-	}
-
-	LOG(Debayer, Info)
-		<< "Unsupported output format " << outputFormat.toString();
+	LOG(Debayer, Debug)
+		<< "Unsupported input format " << inputFormat;
 	return -EINVAL;
 }
 
@@ -641,10 +624,14 @@ int DebayerCpu::setDebayerFunctions(PixelFormat inputFormat,
 
 int DebayerCpu::configure(const StreamConfiguration &inputCfg,
 			  const std::vector<std::reference_wrapper<const StreamConfiguration>> &outputCfgs,
-			  bool ccmEnabled)
+			  bool ccmEnabled,
+			  [[maybe_unused]] bool lscEnabled)
 {
-	if (getInputConfig(inputCfg.pixelFormat, inputConfig_) != 0)
+	if (getInputConfig(inputCfg.pixelFormat, inputConfig_) != 0) {
+		LOG(Debayer, Error)
+			<< "Unsupported input format " << inputCfg.pixelFormat;
 		return -EINVAL;
+	}
 
 	if (stats_->configure(inputCfg, threads_.size()) != 0)
 		return -EINVAL;
@@ -776,15 +763,9 @@ std::vector<PixelFormat> DebayerCpu::formats(PixelFormat inputFormat)
 std::tuple<unsigned int, unsigned int>
 DebayerCpu::strideAndFrameSize(const PixelFormat &outputFormat, const Size &size)
 {
-	DebayerCpu::DebayerOutputConfig config;
-
-	if (getOutputConfig(outputFormat, config) != 0)
-		return std::make_tuple(0, 0);
-
 	/* round up to multiple of 8 for 64 bits alignment */
-	unsigned int stride = (size.width * config.bpp / 8 + 7) & ~7;
-
-	return std::make_tuple(stride, stride * size.height);
+	const PixelFormatInfo &info = PixelFormatInfo::info(outputFormat);
+	return std::make_tuple(info.stride(size.width, 0, 8), info.frameSize(size, 8));
 }
 
 void DebayerCpuThread::setupInputMemcpy(const uint8_t *linePointers[])
@@ -1010,9 +991,9 @@ void DebayerCpu::updateLookupTables(const DebayerParams &params)
 	};
 	const unsigned int gammaTableSize = gammaTable_.size();
 
-	const RGB<float> blackIndex = params.blackLevel * kRGBLookupSize;
-	const RGB<float> gains = params.gains;
-	const RGB<float> div = (RGB<float>(kRGBLookupSize) - blackIndex).max(1.0);
+	const RGB<double> blackIndex = params.blackLevel * kRGBLookupSize;
+	const RGB<double> gains = params.gains;
+	const RGB<double> div = (RGB<double>(kRGBLookupSize) - blackIndex).max(1.0);
 
 	if (ccmEnabled_) {
 		if (gammaUpdateNeeded ||
@@ -1025,7 +1006,7 @@ void DebayerCpu::updateLookupTables(const DebayerParams &params)
 			const unsigned int greenIndex = 1;
 			const unsigned int blueIndex = swapRedBlueGains_ ? 0 : 2;
 			for (unsigned int i = 0; i < kRGBLookupSize; i++) {
-				const RGB<float> rgb = (gains * (RGB<float>(i) - blackIndex) * kRGBLookupSize / div)
+				const RGB<double> rgb = (gains * (RGB<double>(i) - blackIndex) * kRGBLookupSize / div)
 							       .clamp(0.0, kRGBLookupSize - 1);
 				red[i].r = std::round(rgb.r() * params.combinedMatrix[redIndex][0]);
 				red[i].g = std::round(rgb.r() * params.combinedMatrix[greenIndex][0]);
@@ -1045,8 +1026,8 @@ void DebayerCpu::updateLookupTables(const DebayerParams &params)
 			auto &green = green_;
 			auto &blue = swapRedBlueGains_ ? red_ : blue_;
 			for (unsigned int i = 0; i < kRGBLookupSize; i++) {
-				const RGB<float> lutGains =
-					(gains * (RGB<float>(i) - blackIndex) * gammaTableSize / div)
+				const RGB<double> lutGains =
+					(gains * (RGB<double>(i) - blackIndex) * gammaTableSize / div)
 						.clamp(0.0, gammaTableSize - 1);
 				red[i] = gammaTable_[lutGains.r()];
 				green[i] = gammaTable_[lutGains.g()];
