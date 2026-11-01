@@ -24,7 +24,7 @@ tracks:
     release_tag: v:{version}
     ros_distro: humble
     vcs_type: git
-    vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
+    vcs_uri: https://gitlab.freedesktop.org/camera/libcamera.git
     version: :{ask}
   jazzy:
     actions:
@@ -53,7 +53,7 @@ tracks:
     release_tag: v:{version}
     ros_distro: jazzy
     vcs_type: git
-    vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
+    vcs_uri: https://gitlab.freedesktop.org/camera/libcamera.git
     version: :{ask}
   kilted:
     actions:
@@ -80,7 +80,7 @@ tracks:
     release_tag: v:{version}
     ros_distro: kilted
     vcs_type: git
-    vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
+    vcs_uri: https://gitlab.freedesktop.org/camera/libcamera.git
     version: :{ask}
   lyrical:
     actions:
@@ -109,7 +109,7 @@ tracks:
     release_tag: v:{version}
     ros_distro: lyrical
     vcs_type: git
-    vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
+    vcs_uri: https://gitlab.freedesktop.org/camera/libcamera.git
     version: :{ask}
   rolling:
     actions:
@@ -138,5 +138,5 @@ tracks:
     release_tag: v:{version}
     ros_distro: rolling
     vcs_type: git
-    vcs_uri: https://git.libcamera.org/libcamera/libcamera.git
+    vcs_uri: https://gitlab.freedesktop.org/camera/libcamera.git
     version: :{ask}
