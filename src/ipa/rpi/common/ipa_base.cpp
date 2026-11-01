@@ -9,9 +9,9 @@
 
 #include <array>
 #include <cmath>
+#include <span>
 
 #include <libcamera/base/log.h>
-#include <libcamera/base/span.h>
 #include <libcamera/control_ids.h>
 #include <libcamera/property_ids.h>
 
@@ -66,9 +66,9 @@ const ControlInfoMap::Map ipaControls{
 	{ &controls::AeExposureMode, ControlInfo(controls::AeExposureModeValues) },
 	{ &controls::ExposureValue, ControlInfo(-8.0f, 8.0f, 0.0f) },
 	{ &controls::AeFlickerMode,
-	  ControlInfo({ { ControlValue(controls::FlickerOff),
-			  ControlValue(controls::FlickerManual) } },
-		      ControlValue(controls::FlickerOff)) },
+	  ControlInfo({ { ControlValue(controls::AeFlickerModeOff),
+			  ControlValue(controls::AeFlickerModeManual) } },
+		      ControlValue(controls::AeFlickerModeOff)) },
 	{ &controls::AeFlickerPeriod, ControlInfo(100, 1000000) },
 	{ &controls::Brightness, ControlInfo(-1.0f, 1.0f, 0.0f) },
 	{ &controls::Contrast, ControlInfo(0.0f, 32.0f, 1.0f) },
@@ -78,8 +78,8 @@ const ControlInfoMap::Map ipaControls{
 	{ &controls::FrameDurationLimits,
 	  ControlInfo(static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()),
 		      static_cast<int64_t>(defaultMaxFrameDuration.get<std::micro>()),
-		      Span<const int64_t, 2>{ { static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()),
-						static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()) } }) },
+		      std::span<const int64_t, 2>{ { static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()),
+						     static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()) } }) },
 	{ &controls::draft::NoiseReductionMode, ControlInfo(controls::draft::NoiseReductionModeValues) },
 	{ &controls::rpi::StatsOutputEnable, ControlInfo(false, true, false) },
 };
@@ -101,7 +101,7 @@ const ControlInfoMap::Map ipaAfControls{
 	{ &controls::AfSpeed, ControlInfo(controls::AfSpeedValues) },
 	{ &controls::AfMetering, ControlInfo(controls::AfMeteringValues) },
 	{ &controls::AfWindows, ControlInfo(Rectangle{}, Rectangle(65535, 65535, 65535, 65535),
-					    Span<const Rectangle, 1>{ { Rectangle{} } }) },
+					    std::span<const Rectangle, 1>{ { Rectangle{} } }) },
 	{ &controls::AfTrigger, ControlInfo(controls::AfTriggerValues) },
 	{ &controls::AfPause, ControlInfo(controls::AfPauseValues) },
 	{ &controls::LensPosition, ControlInfo(0.0f, 32.0f, 1.0f) }
@@ -172,7 +172,7 @@ int32_t IpaBase::init(const IPASettings &settings, const InitParams &params, Ini
 	if (platformCtrlsIt != platformControls.end())
 		ctrlMap.merge(ControlInfoMap::Map(platformCtrlsIt->second));
 
-	monoSensor_ = params.sensorInfo.cfaPattern == properties::draft::ColorFilterArrangementEnum::MONO;
+	monoSensor_ = params.sensorInfo.cfaPattern == properties::draft::ColorFilterArrangementMONO;
 	if (!monoSensor_)
 		ctrlMap.merge(ControlInfoMap::Map(ipaColourControls));
 
@@ -250,8 +250,8 @@ int32_t IpaBase::configure(const IPACameraSensorInfo &sensorInfo, const ConfigPa
 	ctrlMap[&controls::FrameDurationLimits] =
 		ControlInfo(static_cast<int64_t>(mode_.minFrameDuration.get<std::micro>()),
 			    static_cast<int64_t>(mode_.maxFrameDuration.get<std::micro>()),
-			    Span<const int64_t, 2>{ { static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()),
-						      static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()) } });
+			    std::span<const int64_t, 2>{ { static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()),
+							   static_cast<int64_t>(defaultMinFrameDuration.get<std::micro>()) } });
 
 	ctrlMap[&controls::AnalogueGain] =
 		ControlInfo(static_cast<float>(mode_.minAnalogueGain),
@@ -351,33 +351,24 @@ void IpaBase::start(const ControlList &controls, StartResult *result)
 	frameCount_ = 0;
 	if (firstStart_) {
 		invalidCount_ = helper_->hideFramesStartup();
-		mistrustCount_ = helper_->mistrustFramesStartup();
+		mistrustCount_ = helper_->mistrustMetadataStartup();
 
 		/*
 		 * Query the AGC/AWB for how many frames they may take to
-		 * converge sufficiently. Where these numbers are non-zero
-		 * we must allow for the frames with bad statistics
-		 * (mistrustCount_) that they won't see. But if zero (i.e.
-		 * no convergence necessary), no frames need to be dropped.
+		 * converge sufficiently.
 		 */
 		RPiController::AgcAlgorithm *agc = dynamic_cast<RPiController::AgcAlgorithm *>(
 			controller_.getAlgorithm("agc"));
-		if (agc) {
+		if (agc)
 			agcConvergenceFrames = agc->getConvergenceFrames();
-			if (agcConvergenceFrames)
-				agcConvergenceFrames += mistrustCount_;
-		}
 
 		RPiController::AwbAlgorithm *awb = dynamic_cast<RPiController::AwbAlgorithm *>(
 			controller_.getAlgorithm("awb"));
-		if (awb) {
+		if (awb)
 			awbConvergenceFrames = awb->getConvergenceFrames();
-			if (awbConvergenceFrames)
-				awbConvergenceFrames += mistrustCount_;
-		}
 	} else {
 		invalidCount_ = helper_->hideFramesModeSwitch();
-		mistrustCount_ = helper_->mistrustFramesModeSwitch();
+		mistrustCount_ = helper_->mistrustMetadataModeSwitch();
 	}
 
 	result->startupFrameCount = std::max({ agcConvergenceFrames, awbConvergenceFrames });
@@ -426,7 +417,7 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 	int64_t frameTimestamp = params.sensorControls.get(controls::SensorTimestamp).value_or(0);
 	unsigned int ipaContext = params.ipaContext % rpiMetadata_.size();
 	RPiController::Metadata &rpiMetadata = rpiMetadata_[ipaContext];
-	Span<uint8_t> embeddedBuffer;
+	std::span<uint8_t> embeddedBuffer;
 
 	rpiMetadata.clear();
 	fillDeviceStatus(params.sensorControls, ipaContext);
@@ -470,8 +461,11 @@ void IpaBase::prepareIsp(const PrepareParams &params)
 	/*
 	 * This may overwrite the DeviceStatus using values from the sensor
 	 * metadata, and may also do additional custom processing.
+	 *
+	 * Only call CamHelper::prepare() when we know the metadata can be trusted.
 	 */
-	helper_->prepare(embeddedBuffer, rpiMetadata);
+	if (frameCount_ >= mistrustCount_)
+		helper_->prepare(embeddedBuffer, rpiMetadata);
 
 	bool delayedRequestControls = false;
 	delayedMetadata.get<bool>("ipa.request_controls", delayedRequestControls);
@@ -527,7 +521,7 @@ void IpaBase::processStats(const ProcessParams &params)
 	unsigned int ipaContext = params.ipaContext % rpiMetadata_.size();
 	RPiController::Metadata &rpiMetadata = rpiMetadata_[ipaContext];
 
-	if (processPending_ && frameCount_ >= mistrustCount_) {
+	if (processPending_) {
 		auto it = buffers_.find(params.buffers.stats);
 		if (it == buffers_.end()) {
 			LOG(IPARPI, Error) << "Could not find stats buffer!";
@@ -567,10 +561,22 @@ void IpaBase::setMode(const IPACameraSensorInfo &sensorInfo)
 	mode_.bitdepth = sensorInfo.bitsPerPixel;
 	mode_.width = sensorInfo.outputSize.width;
 	mode_.height = sensorInfo.outputSize.height;
-	mode_.sensorWidth = sensorInfo.activeAreaSize.width;
-	mode_.sensorHeight = sensorInfo.activeAreaSize.height;
-	mode_.cropX = sensorInfo.analogCrop.x;
-	mode_.cropY = sensorInfo.analogCrop.y;
+	mode_.sensorWidth = sensorInfo.activeArea.width;
+	mode_.sensorHeight = sensorInfo.activeArea.height;
+	/*
+	 * CameraMode::cropX/Y are defined relative to the active pixel area,
+	 * whereas IPACameraSensorInfo::analogCrop is relative to the physical
+	 * pixel array. Rebase the crop origin onto the active area.
+	 */
+	mode_.cropX = sensorInfo.analogCrop.x - std::min(sensorInfo.activeArea.x,
+							 sensorInfo.analogCrop.x);
+	mode_.cropY = sensorInfo.analogCrop.y - std::min(sensorInfo.activeArea.y,
+							 sensorInfo.analogCrop.y);
+	if (sensorInfo.analogCrop.x < sensorInfo.activeArea.x ||
+	    sensorInfo.analogCrop.y < sensorInfo.activeArea.y) {
+		LOG(IPARPI, Warning) << "Analog crop lies outside the active area."
+				     << " This can result in image artifacts.";
+	}
 	mode_.pixelRate = sensorInfo.pixelRate;
 
 	/*
@@ -719,35 +725,35 @@ bool IpaBase::validateLensControls()
  * must be kept up-to-date by hand.
  */
 static const std::map<int32_t, std::string> MeteringModeTable = {
-	{ controls::MeteringCentreWeighted, "centre-weighted" },
-	{ controls::MeteringSpot, "spot" },
-	{ controls::MeteringMatrix, "matrix" },
-	{ controls::MeteringCustom, "custom" },
+	{ controls::AeMeteringModeCentreWeighted, "centre-weighted" },
+	{ controls::AeMeteringModeSpot, "spot" },
+	{ controls::AeMeteringModeMatrix, "matrix" },
+	{ controls::AeMeteringModeCustom, "custom" },
 };
 
 static const std::map<int32_t, std::string> ConstraintModeTable = {
-	{ controls::ConstraintNormal, "normal" },
-	{ controls::ConstraintHighlight, "highlight" },
-	{ controls::ConstraintShadows, "shadows" },
-	{ controls::ConstraintCustom, "custom" },
+	{ controls::AeConstraintModeNormal, "normal" },
+	{ controls::AeConstraintModeHighlight, "highlight" },
+	{ controls::AeConstraintModeShadows, "shadows" },
+	{ controls::AeConstraintModeCustom, "custom" },
 };
 
 static const std::map<int32_t, std::string> ExposureModeTable = {
-	{ controls::ExposureNormal, "normal" },
-	{ controls::ExposureShort, "short" },
-	{ controls::ExposureLong, "long" },
-	{ controls::ExposureCustom, "custom" },
+	{ controls::AeExposureModeNormal, "normal" },
+	{ controls::AeExposureModeShort, "short" },
+	{ controls::AeExposureModeLong, "long" },
+	{ controls::AeExposureModeCustom, "custom" },
 };
 
 static const std::map<int32_t, std::string> AwbModeTable = {
-	{ controls::AwbAuto, "auto" },
-	{ controls::AwbIncandescent, "incandescent" },
-	{ controls::AwbTungsten, "tungsten" },
-	{ controls::AwbFluorescent, "fluorescent" },
-	{ controls::AwbIndoor, "indoor" },
-	{ controls::AwbDaylight, "daylight" },
-	{ controls::AwbCloudy, "cloudy" },
-	{ controls::AwbCustom, "custom" },
+	{ controls::AwbModeAuto, "auto" },
+	{ controls::AwbModeIncandescent, "incandescent" },
+	{ controls::AwbModeTungsten, "tungsten" },
+	{ controls::AwbModeFluorescent, "fluorescent" },
+	{ controls::AwbModeIndoor, "indoor" },
+	{ controls::AwbModeDaylight, "daylight" },
+	{ controls::AwbModeCloudy, "cloudy" },
+	{ controls::AwbModeCustom, "custom" },
 };
 
 static const std::map<int32_t, RPiController::AfAlgorithm::AfMode> AfModeTable = {
@@ -1094,12 +1100,12 @@ void IpaBase::applyControls(const ControlList &controls)
 			bool modeValid = true;
 
 			switch (mode) {
-			case controls::FlickerOff:
+			case controls::AeFlickerModeOff:
 				agc->setFlickerPeriod(0us);
 
 				break;
 
-			case controls::FlickerManual:
+			case controls::AeFlickerModeManual:
 				agc->setFlickerPeriod(flickerState_.manualPeriod);
 
 				break;
@@ -1133,7 +1139,7 @@ void IpaBase::applyControls(const ControlList &controls)
 			 * We note that it makes no difference if the mode gets set to "manual"
 			 * first, and the period updated after, or vice versa.
 			 */
-			if (flickerState_.mode == controls::FlickerManual)
+			if (flickerState_.mode == controls::AeFlickerModeManual)
 				agc->setFlickerPeriod(flickerState_.manualPeriod);
 
 			break;
@@ -1183,7 +1189,7 @@ void IpaBase::applyControls(const ControlList &controls)
 			if (monoSensor_)
 				break;
 
-			auto floats = ctrl.second.get<Span<const float>>();
+			auto floats = ctrl.second.get<std::span<const float>>();
 			RPiController::CcmAlgorithm *ccm = dynamic_cast<RPiController::CcmAlgorithm *>(
 				controller_.getAlgorithm("ccm"));
 			if (!ccm) {
@@ -1293,7 +1299,7 @@ void IpaBase::applyControls(const ControlList &controls)
 		}
 
 		case controls::FRAME_DURATION_LIMITS: {
-			auto frameDurations = ctrl.second.get<Span<const int64_t>>();
+			auto frameDurations = ctrl.second.get<std::span<const int64_t>>();
 			applyFrameDurations(frameDurations[0] * 1.0us, frameDurations[1] * 1.0us);
 			break;
 		}
@@ -1357,7 +1363,7 @@ void IpaBase::applyControls(const ControlList &controls)
 					<< "Could not set AF_WINDOWS - no AF algorithm";
 				break;
 			}
-			af->setWindows(ctrl.second.get<Span<const Rectangle>>());
+			af->setWindows(ctrl.second.get<std::span<const Rectangle>>());
 			break;
 		}
 
