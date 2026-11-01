@@ -12,12 +12,12 @@
 #include <algorithm>
 #include <assert.h>
 #include <memory>
+#include <span>
 #include <stdlib.h>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include <libcamera/base/span.h>
 #include <libcamera/base/utils.h>
 
 #include <libcamera/formats.h>
@@ -40,9 +40,10 @@ namespace libcamera {
  * \brief Construct a DebayerEGL object
  * \param[in] stats Statistics processing object
  * \param[in] cm The camera manager
+ * \param[in] display The EGL display to use
  */
-DebayerEGL::DebayerEGL(std::unique_ptr<SwStatsCpu> stats, const CameraManager &cm)
-	: Debayer(cm), stats_(std::move(stats))
+DebayerEGL::DebayerEGL(std::unique_ptr<SwStatsCpu> stats, const CameraManager &cm, EGLDisplay display)
+	: Debayer(cm), stats_(std::move(stats)), egl_(display)
 {
 }
 
@@ -90,22 +91,8 @@ int DebayerEGL::getInputConfig(PixelFormat inputFormat, DebayerInputConfig &conf
 		return 0;
 	}
 
-	LOG(Debayer, Info)
+	LOG(Debayer, Debug)
 		<< "Unsupported input format " << inputFormat;
-
-	return -EINVAL;
-}
-
-int DebayerEGL::getOutputConfig(PixelFormat outputFormat, DebayerOutputConfig &config)
-{
-	if (outputFormat == formats::XRGB8888 || outputFormat == formats::ARGB8888 ||
-	    outputFormat == formats::XBGR8888 || outputFormat == formats::ABGR8888) {
-		config.bpp = 32;
-		return 0;
-	}
-
-	LOG(Debayer, Info)
-		<< "Unsupported output format " << outputFormat;
 
 	return -EINVAL;
 }
@@ -128,6 +115,8 @@ int DebayerEGL::getShaderVariableLocations(void)
 	textureUniformBayerFirstRed_ = glGetUniformLocation(programId_, "tex_bayer_first_red");
 	textureUniformProjMatrix_ = glGetUniformLocation(programId_, "proj_matrix");
 
+	textureUniformLsc_ = glGetUniformLocation(programId_, "lsc_tex");
+
 	LOG(Debayer, Debug) << "vertexIn " << attributeVertex_ << " textureIn " << attributeTexture_
 			    << " tex_y " << textureUniformBayerDataIn_
 			    << " awb " << awbUniformDataIn_
@@ -139,15 +128,16 @@ int DebayerEGL::getShaderVariableLocations(void)
 			    << " tex_size " << textureUniformSize_
 			    << " stride_factor " << textureUniformStrideFactor_
 			    << " tex_bayer_first_red " << textureUniformBayerFirstRed_
-			    << " proj_matrix " << textureUniformProjMatrix_;
+			    << " proj_matrix " << textureUniformProjMatrix_
+			    << " tex_lsc " << textureUniformLsc_;
 	return 0;
 }
 
 int DebayerEGL::initBayerShaders(PixelFormat inputFormat, PixelFormat outputFormat)
 {
+	std::span<const unsigned char> fragmentShaderData;
+	std::span<const unsigned char> vertexShaderData;
 	std::vector<std::string> shaderEnv;
-	Span<const unsigned char> fragmentShaderData;
-	Span<const unsigned char> vertexShaderData;
 	GLenum err;
 
 	/* Target gles 100 glsl requires "#version x" as first directive in shader */
@@ -155,6 +145,9 @@ int DebayerEGL::initBayerShaders(PixelFormat inputFormat, PixelFormat outputForm
 
 	/* Specify GL_OES_EGL_image_external */
 	egl_.pushEnv(shaderEnv, "#extension GL_OES_EGL_image_external: enable");
+
+	if (lscEnabled_)
+		egl_.pushEnv(shaderEnv, "#define APPLY_LSC");
 
 	/*
 	 * Tell shaders how to re-order output taking account of how the pixels
@@ -274,7 +267,7 @@ int DebayerEGL::initBayerShaders(PixelFormat inputFormat, PixelFormat outputForm
 	egl_.dumpShaderSource(fragmentShaderId_);
 
 	/* Ensure we set the programId_ */
-	egl_.useProgram(programId_);
+	glUseProgram(programId_);
 	err = glGetError();
 	if (err != GL_NO_ERROR) {
 		LOG(Debayer, Error) << "Use program error " << err;
@@ -286,10 +279,14 @@ int DebayerEGL::initBayerShaders(PixelFormat inputFormat, PixelFormat outputForm
 
 int DebayerEGL::configure(const StreamConfiguration &inputCfg,
 			  const std::vector<std::reference_wrapper<const StreamConfiguration>> &outputCfgs,
-			  [[maybe_unused]] bool ccmEnabled)
+			  [[maybe_unused]] bool ccmEnabled,
+			  bool lscEnabled)
 {
-	if (getInputConfig(inputCfg.pixelFormat, inputConfig_) != 0)
+	if (getInputConfig(inputCfg.pixelFormat, inputConfig_) != 0) {
+		LOG(Debayer, Error)
+			<< "Unsupported input format " << inputCfg.pixelFormat;
 		return -EINVAL;
+	}
 
 	if (stats_->configure(inputCfg) != 0)
 		return -EINVAL;
@@ -302,6 +299,8 @@ int DebayerEGL::configure(const StreamConfiguration &inputCfg,
 			<< inputCfg.pixelFormat;
 		return -EINVAL;
 	}
+
+	lscEnabled_ = lscEnabled;
 
 	inputConfig_.stride = inputCfg.stride;
 	inputPixelFormat_ = inputCfg.pixelFormat;
@@ -374,15 +373,9 @@ std::vector<PixelFormat> DebayerEGL::formats(PixelFormat inputFormat)
 std::tuple<unsigned int, unsigned int>
 DebayerEGL::strideAndFrameSize(const PixelFormat &outputFormat, const Size &size)
 {
-	DebayerEGL::DebayerOutputConfig config;
-
-	if (getOutputConfig(outputFormat, config) != 0)
-		return std::make_tuple(0, 0);
-
 	/* Align stride to 256 bytes as a generic GPU memory access alignment */
-	unsigned int stride = libcamera::utils::alignUp(size.width * config.bpp / 8, 256);
-
-	return std::make_tuple(stride, stride * size.height);
+	const PixelFormatInfo &info = PixelFormatInfo::info(outputFormat);
+	return std::make_tuple(info.stride(size.width, 0, 256), info.frameSize(size, 256));
 }
 
 uint32_t DebayerEGL::preferredInputStride(const PixelFormat &inputFormat, const Size &size)
@@ -480,8 +473,17 @@ void DebayerEGL::setShaderVariableValues(eGLImage &eglImageIn, const DebayerPara
 			    << " textureUniformStrideFactor_ " << Stride
 			    << " textureUniformProjMatrix_ " << textureUniformProjMatrix_;
 
-	glUniformMatrix3fv(ccmUniformDataIn_, 1, GL_TRUE, params.combinedMatrix.data().data());
+	/* Pre-transpose matrix for GLES 2.0. */
+	Matrix<float, 3, 3> ccm = params.combinedMatrix.transpose();
+	glUniformMatrix3fv(ccmUniformDataIn_, 1, GL_FALSE, ccm.data().data());
 	LOG(Debayer, Debug) << " ccmUniformDataIn_ " << ccmUniformDataIn_ << " data " << params.combinedMatrix;
+
+	if (lscEnabled_ && params.lscLutVersion != lscLutVersion_) {
+		egl_.updateTexture2D(*eglImageLscLookup_, params.lscLut.data());
+		lscLutVersion_ = params.lscLutVersion;
+		glUniform1i(textureUniformLsc_, eglImageLscLookup_->texture_unit_uniform_id_);
+		LOG(Debayer, Debug) << "LSC texture updated to version " << lscLutVersion_.value_or(-1);
+	}
 
 	/*
 	 * 0 = Red, 1 = Green, 2 = Blue
@@ -533,6 +535,9 @@ eGLImage *DebayerEGL::getCachedInputFrameBuffer(FrameBuffer *input, std::optiona
 		if (egl_.createInputDMABufTexture2D(*eglImageIn, input->planes()[0].fd.get()) == 0)
 			return eglImageIn;
 
+		if (eglImageInCache_.size() == 1)
+			LOG(Debayer, Info)
+				<< "Importing input DMABuf failed, falling back to upload";
 	} else if (!eglImageIn->dmabuf_import_failed_) {
 		egl_.activateBindTexture(*eglImageIn);
 		return eglImageIn;
@@ -549,7 +554,7 @@ eGLImage *DebayerEGL::getCachedInputFrameBuffer(FrameBuffer *input, std::optiona
 		return nullptr;
 	}
 	if (cache_miss)
-		egl_.createTexture2D(*eglImageIn, inMapped->value().planes()[0].data());
+		egl_.createTexture2D(*eglImageIn, inMapped->value().planes()[0].data(), GL_NEAREST);
 	else
 		egl_.updateTexture2D(*eglImageIn, inMapped->value().planes()[0].data());
 
@@ -594,9 +599,6 @@ int DebayerEGL::debayerGPU(FrameBuffer *input, FrameBuffer *output, const Debaye
 	eGLImage *eglImageIn;
 	eGLImage *eglImageOut;
 
-	/* eGL context switch */
-	egl_.makeCurrent();
-
 	eglImageIn = getCachedInputFrameBuffer(input, inMapped, inDmaSyncer);
 	if (!eglImageIn)
 		return -ENOMEM;
@@ -624,6 +626,7 @@ int DebayerEGL::debayerGPU(FrameBuffer *input, FrameBuffer *output, const Debaye
 
 void DebayerEGL::process(uint32_t frame, FrameBuffer *input, FrameBuffer *output, const DebayerParams &params)
 {
+	egl_.assertThread();
 	bench_.startFrame();
 
 	/* Copy metadata from the input buffer */
@@ -688,6 +691,18 @@ int DebayerEGL::start()
 	if (initBayerShaders(inputPixelFormat_, outputPixelFormat_))
 		return -EINVAL;
 
+	if (lscEnabled_) {
+		constexpr unsigned int gridSize = DebayerParams::kLscGridSize;
+		constexpr unsigned int stride = gridSize * DebayerParams::kLscBytesPerCell;
+		eglImageLscLookup_.emplace(GL_RGBA,
+					   gridSize,
+					   gridSize,
+					   stride,
+					   GL_TEXTURE2,
+					   2);
+		egl_.createTexture2D(*eglImageLscLookup_, nullptr, GL_LINEAR);
+	}
+
 	return 0;
 }
 
@@ -696,8 +711,13 @@ void DebayerEGL::stop()
 	eglImageOutCache_.clear();
 	eglImageInCache_.clear();
 
+	eglImageLscLookup_.reset();
+	lscLutVersion_.reset();
+
 	if (programId_)
 		glDeleteProgram(programId_);
+
+	egl_.resetEGLContext();
 }
 
 SizeRange DebayerEGL::sizes(PixelFormat inputFormat, const Size &inputSize)
