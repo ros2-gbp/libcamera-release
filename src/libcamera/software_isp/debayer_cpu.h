@@ -37,7 +37,8 @@ public:
 
 	int configure(const StreamConfiguration &inputCfg,
 		      const std::vector<std::reference_wrapper<const StreamConfiguration>> &outputCfgs,
-		      bool ccmEnabled) override;
+		      bool ccmEnabled,
+		      bool lscEnabled) override;
 	Size patternSize(PixelFormat inputFormat) override;
 	std::vector<PixelFormat> formats(PixelFormat input) override;
 	std::tuple<unsigned int, unsigned int>
@@ -121,7 +122,6 @@ private:
 	void debayer12P_RGRG_BGR888(uint8_t *dst, const uint8_t *src[]);
 
 	static int getInputConfig(PixelFormat inputFormat, DebayerInputConfig &config);
-	static int getOutputConfig(PixelFormat outputFormat, DebayerOutputConfig &config);
 	int setupStandardBayerOrder(BayerFormat::Order order);
 	int setDebayerFunctions(PixelFormat inputFormat,
 				PixelFormat outputFormat,
