@@ -1,3 +1,26 @@
+## libcamera (lyrical) - 0.8.0-1
+
+The packages in the `libcamera` repository were released into the `lyrical` distro by running `/usr/bin/bloom-release libcamera --rosdistro lyrical` on `Thu, 05 Nov 2026 22:31:15 -0000`
+
+The `libcamera` package was released.
+
+Version of package(s) in repository `libcamera`:
+
+- upstream repository: https://gitlab.freedesktop.org/camera/libcamera.git
+- release repository: https://github.com/ros2-gbp/libcamera-release.git
+- rosdistro version: `0.7.2-1`
+- old version: `0.7.2-1`
+- new version: `0.8.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.4`
+- catkin_pkg version: `1.1.1`
+- rosdep version: `0.27.0`
+- rosdistro version: `1.1.0`
+- vcstools version: `0.1.42`
+
+
 ## libcamera (rolling) - 0.8.0-1
 
 The packages in the `libcamera` repository were released into the `rolling` distro by running `/usr/bin/bloom-release libcamera --rosdistro rolling` on `Sun, 01 Nov 2026 14:39:45 -0000`
