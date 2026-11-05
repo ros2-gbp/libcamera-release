@@ -40,7 +40,8 @@ public:
 
 	virtual int configure(const StreamConfiguration &inputCfg,
 			      const std::vector<std::reference_wrapper<const StreamConfiguration>> &outputCfgs,
-			      bool ccmEnabled) = 0;
+			      bool ccmEnabled,
+			      bool lscEnabled) = 0;
 
 	virtual std::vector<PixelFormat> formats(PixelFormat inputFormat) = 0;
 
@@ -69,7 +70,6 @@ public:
 	};
 
 	struct DebayerOutputConfig {
-		unsigned int bpp;
 		unsigned int stride;
 		unsigned int frameSize;
 	};
